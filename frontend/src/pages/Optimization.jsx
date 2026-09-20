@@ -137,27 +137,41 @@ export default function Optimization() {
               </div>
             </div>
 
-            {/* Warehouse capacity slider */}
+            {/* Warehouse capacity slider & custom input box */}
             <div className="space-y-2">
-              <div className="flex justify-between text-xs">
+              <div className="flex items-center justify-between text-xs">
                 <label className="font-semibold text-slate-700">Max Warehouse Capacity Limit:</label>
-                <span className="font-mono text-blue-600 font-bold text-sm">
-                  {localSettings.capacity_limit.toLocaleString()} orders/hub
-                </span>
+                <div className="flex items-center space-x-1.5">
+                  <input
+                    type="number"
+                    min="500"
+                    max="100000"
+                    step="250"
+                    value={localSettings.capacity_limit}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      handleChange('capacity_limit', isNaN(val) ? 0 : Math.max(0, val));
+                    }}
+                    className="w-24 px-2 py-1 border border-slate-300 rounded font-mono text-xs font-bold text-blue-600 text-right focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white"
+                  />
+                  <span className="font-mono text-xs text-slate-500 font-medium">orders/hub</span>
+                </div>
               </div>
               <input
                 type="range"
                 min="1000"
-                max="12000"
+                max={Math.max(20000, Math.ceil((localSettings.capacity_limit || 12000) * 1.25 / 1000) * 1000)}
                 step="500"
-                value={localSettings.capacity_limit}
+                value={localSettings.capacity_limit || 1000}
                 onChange={(e) => handleChange('capacity_limit', parseInt(e.target.value, 10))}
                 className="w-full accent-blue-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
               />
-              <div className="flex justify-between text-[11px] text-slate-500">
+              <div className="flex justify-between text-[11px] text-slate-500 font-mono">
                 <span>1,000 orders</span>
-                <span>Total Network Capacity: {(localSettings.num_warehouses * localSettings.capacity_limit).toLocaleString()}</span>
-                <span>12,000 orders</span>
+                <span className="font-semibold text-slate-700">
+                  Total Network Capacity: {(localSettings.num_warehouses * (localSettings.capacity_limit || 0)).toLocaleString()} orders
+                </span>
+                <span>{Math.max(20000, Math.ceil((localSettings.capacity_limit || 12000) * 1.25 / 1000) * 1000).toLocaleString()} orders</span>
               </div>
               <p className="text-[11px] text-slate-400 italic">
                 * If a warehouse cluster exceeds this limit, surplus demand is automatically reassigned to the next closest facility.

@@ -42,7 +42,7 @@ export default function Dashboard() {
         <div className="pt-3 pb-1 flex items-center justify-center">
           <button
             onClick={() => navigate('/data')}
-            className="inline-flex items-center space-x-2.5 px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm tracking-wide shadow-lg shadow-blue-500/25 hover:shadow-blue-500/35 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
+            className="inline-flex items-center space-x-2.5 px-8 py-3.5 rounded-full bg-black hover:bg-slate-900 text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 hover:shadow-black/35 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
             <span>Start Optimization</span>
             <ArrowRight className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   BarChart3, 
@@ -28,7 +28,7 @@ import { WAREHOUSE_COLORS } from '../utils/sampleData';
 import { generateOptimizationPDF } from '../utils/pdfReportGenerator';
 
 export default function Results() {
-  const { results, neighborhoods, settings } = useApp();
+  const { results, neighborhoods, settings, executeOptimization, updateSettings, isOptimizing } = useApp();
   const navigate = useNavigate();
 
   const [filterHub, setFilterHub] = useState('all');
@@ -68,6 +68,30 @@ export default function Results() {
   });
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [customCapacity, setCustomCapacity] = useState(settings?.capacity_limit || 5000);
+
+  useEffect(() => {
+    if (settings?.capacity_limit) {
+      if (summary?.is_total_capacity_exceeded) {
+        // Suggest a capacity that comfortably accommodates all incoming demand
+        const minSuggested = Math.ceil((summary.total_daily_orders / Math.max(1, settings.num_warehouses || 3)) * 1.15 / 250) * 250;
+        setCustomCapacity(Math.max(settings.capacity_limit + 1000, minSuggested));
+      } else {
+        setCustomCapacity(settings.capacity_limit);
+      }
+    }
+  }, [settings?.capacity_limit, summary?.is_total_capacity_exceeded, summary?.total_daily_orders, settings?.num_warehouses]);
+
+  // Recalculate whole analysis with updated capacity limit
+  const handleRecalculateCapacity = async (e) => {
+    if (e) e.preventDefault();
+    const newCap = parseInt(customCapacity, 10);
+    if (!newCap || newCap <= 0) return;
+
+    const newSettings = { ...settings, capacity_limit: newCap };
+    updateSettings(newSettings);
+    await executeOptimization(newSettings);
+  };
 
   // Export comprehensive PDF report
   const handleExportPDF = async () => {
@@ -109,6 +133,30 @@ export default function Results() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* Quick Capacity Limit Box */}
+          <form onSubmit={handleRecalculateCapacity} className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs shadow-2xs">
+            <span className="text-slate-600 text-[11px] font-medium hidden sm:inline">Capacity Limit:</span>
+            <input
+              type="number"
+              min="500"
+              max="100000"
+              step="250"
+              value={customCapacity}
+              onChange={(e) => setCustomCapacity(e.target.value)}
+              className="w-20 px-1.5 py-0.5 border border-slate-300 rounded font-mono text-xs font-bold text-blue-600 text-right bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-600"
+              title="Max Warehouse Capacity Limit (orders/hub)"
+            />
+            <span className="text-[10px] text-slate-400 font-mono hidden md:inline">orders</span>
+            <button
+              type="submit"
+              disabled={isOptimizing}
+              className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[10px] transition-all disabled:opacity-50 cursor-pointer"
+              title="Recalculate analysis with this updated capacity"
+            >
+              {isOptimizing ? '...' : 'Apply'}
+            </button>
+          </form>
+
           <button
             onClick={() => navigate('/optimize')}
             className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-colors"
@@ -143,7 +191,7 @@ export default function Results() {
       {/* CASE 2: Global Network Capacity Exceeded Alert Banner */}
       {summary.is_total_capacity_exceeded && (
         <div className="rounded-lg bg-rose-50 border-2 border-rose-400 p-5 shadow-sm space-y-4 animate-in fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="flex items-start space-x-3.5">
               <div className="p-2.5 rounded-lg bg-rose-100 text-rose-700 shrink-0 mt-0.5">
                 <AlertTriangle className="w-6 h-6 text-rose-600" />
@@ -182,6 +230,43 @@ export default function Results() {
                 <span>Adjust Settings</span>
               </button>
             </div>
+          </div>
+
+          {/* User Solution: Increase Max Warehouse Capacity Limit Box */}
+          <div className="pt-3 border-t border-rose-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/90 rounded-lg p-3.5 border border-rose-200 shadow-2xs">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <Building className="w-3.5 h-3.5 text-blue-600" />
+                <span>Increase Max Warehouse Capacity Limit:</span>
+              </span>
+              <p className="text-[11px] text-slate-500">
+                Expand throughput capacity for this dataset and immediately recalculate fulfillment.
+              </p>
+            </div>
+
+            <form onSubmit={handleRecalculateCapacity} className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center space-x-1.5">
+                <input
+                  type="number"
+                  min="500"
+                  max="100000"
+                  step="250"
+                  value={customCapacity}
+                  onChange={(e) => setCustomCapacity(e.target.value)}
+                  placeholder="e.g. 8000"
+                  className="w-28 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 border border-slate-300 rounded focus:outline-none focus:border-blue-600 bg-white"
+                />
+                <span className="text-xs text-slate-600 font-mono">orders/hub</span>
+              </div>
+              <button
+                type="submit"
+                disabled={isOptimizing}
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>{isOptimizing ? 'Recalculating...' : 'Recalculate with Increased Capacity'}</span>
+              </button>
+            </form>
           </div>
         </div>
       )}
