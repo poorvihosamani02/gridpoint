@@ -3,71 +3,168 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-slate-950 text-slate-100 font-sans antialiased;
-    background-color: #0b1120;
+    background-color: #0a101d;
     color: #f8fafc;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 }
 
-/* Card design utility: rounded corners, subtle navy border, soft shadow */
-@layer components {
-  .gp-card {
-    @apply bg-slate-900 border border-slate-800 rounded-xl shadow-card transition-colors duration-150;
-  }
-  .gp-card:hover {
-    @apply border-slate-700/80;
-  }
+/* ==========================================================================
+   MINIMAL LOGISTICS SAAS THEME OVERRIDES (Clean, Data-Driven, No Heavy Gradients)
+   ========================================================================== */
+
+/* Neutralize distracting decorative blur orbs */
+.blur-3xl, .blur-2xl {
+  display: none !important;
 }
 
-/* Leaflet map container */
+/* Solid, professional Blue buttons (replace rainbow multi-color gradients) */
+button.bg-gradient-to-r,
+.bg-gradient-to-r.from-brand-600 {
+  background-image: none !important;
+  background-color: #2563eb !important; /* Action Blue */
+  border: 1px solid #1d4ed8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+button.bg-gradient-to-r:hover,
+.bg-gradient-to-r.from-brand-600:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Clean up hero section: replace heavy multi-color background with solid Deep Navy panel */
+section.bg-gradient-to-b {
+  background-image: none !important;
+  background-color: #0e1726 !important;
+  border: 1px solid #1e293b !important;
+}
+
+/* Replace rainbow gradient text with crisp clean white & subtle blue */
+.bg-gradient-to-r.from-brand-400.via-cyan-300 {
+  background-image: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  color: #38bdf8 !important; /* Crisp Sky Blue */
+}
+
+.bg-gradient-to-r.from-white.via-slate-100 {
+  background-image: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  color: #ffffff !important;
+}
+
+/* Clean, flat executive savings banner (replace dark-green radial gradient) */
+.bg-gradient-to-r.from-emerald-950\/60 {
+  background-image: none !important;
+  background-color: #0e1726 !important;
+  border: 1px solid #1e293b !important;
+}
+
+/* Disable excessive ping animations on status indicators (solid, clean indicators) */
+.animate-ping {
+  display: none !important;
+}
+
+.animate-pulse {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   CARDS, BORDERS & SHADOWS (Structured, 6-10px Radii, Subtle 1px Dividers)
+   ========================================================================== */
+
+/* Universal SaaS card styling */
+.bg-slate-900\/60,
+.bg-slate-900\/70,
+.bg-slate-900\/80,
+.bg-slate-900\/90 {
+  background-color: #0e1726 !important;
+  border-color: #1e293b !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+header {
+  background-color: #0a101d !important;
+  border-color: #1e293b !important;
+  backdrop-filter: none !important;
+}
+
+/* Clean subtle hover states on data rows & cards */
+.hover\:border-slate-700:hover {
+  border-color: #334155 !important;
+}
+
+/* ==========================================================================
+   LEAFLET MAP & GEOSPATIAL DATA STYLING
+   ========================================================================== */
+
 .leaflet-container {
   width: 100%;
   height: 100%;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem !important; /* 8px SaaS border-radius */
   font-family: inherit;
-  background-color: #0b1120 !important;
+  background-color: #0a101d !important;
 }
 
-/* Crisp dark-navy map tiles filter for a modern, serious geospatial look */
+/* Crisp dark navy map tiles (data-centric CartoDB contrast) */
 .leaflet-tile {
-  filter: brightness(0.65) invert(1) contrast(2.6) hue-rotate(205deg) saturate(0.25) brightness(0.72);
+  filter: brightness(0.62) invert(1) contrast(2.4) hue-rotate(205deg) saturate(0.2) brightness(0.75);
 }
 
-/* Clean, modern popup cards */
+/* Professional data popups */
 .custom-leaflet-popup .leaflet-popup-content-wrapper {
-  background: #0f172a;
-  color: #f8fafc;
-  border: 1px solid #1e293b;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgba(2, 6, 23, 0.7), 0 8px 10px -6px rgba(2, 6, 23, 0.5);
-  padding: 0.25rem;
+  background: #0e1726 !important;
+  color: #f8fafc !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.5) !important;
+  padding: 0.25rem !important;
 }
 
 .custom-leaflet-popup .leaflet-popup-tip {
-  background: #0f172a;
-  border: 1px solid #1e293b;
+  background: #0e1726 !important;
+  border: 1px solid #1e293b !important;
 }
 
-/* Subtle, minimal constraint violation indicator (steady, high-contrast, no distracting movement) */
-.violation-ring {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
+/* Warehouse Pin Marker (Solid, minimal, no neon glow) */
+.custom-warehouse-pin div {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Minimal, professional scrollbars */
+/* Steady, minimal SLA constraint violation indicator (solid red border, no pulsing ring) */
+.pulse-violation {
+  animation: none !important;
+  stroke: #ef4444 !important;
+  stroke-width: 2px !important;
+}
+
+/* ==========================================================================
+   SCROLLBARS & TABLE UTILITIES
+   ========================================================================== */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b1120;
+  background: #0a101d;
 }
 ::-webkit-scrollbar-thumb {
   background: #1e293b;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
