@@ -86,26 +86,32 @@ def run_capacitated_kmeans(
     weights: np.ndarray,
     k: int,
     capacity_limit: int,
+    neighborhood_names: List[str] = None,
     max_iters: int = 25
-) -> Tuple[np.ndarray, np.ndarray, List[bool]]:
+) -> Tuple[np.ndarray, np.ndarray, List[bool], List[int], List[Dict[str, Any]], np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates K warehouse locations minimizing weighted distance while respecting
     warehouse capacity limits via regret-based reallocation.
     
-    Returns:
-    - centroids: (K, 2) array of [lat, lng]
-    - final_assignments: (N,) array of warehouse indices [0..K-1]
-    - reassigned_flags: (N,) boolean list indicating whether item had to be overflow-reassigned
+    If one warehouse is overloaded while others have spare capacity (CASE 1),
+    orders are diverted to the nearest warehouse with remaining space.
     """
     n_points = len(coords)
     k = min(k, n_points)
     
+    if neighborhood_names is None:
+        neighborhood_names = [f"Corridor {i+1}" for i in range(n_points)]
+
     if k <= 1:
         med_lat, med_lng = compute_weighted_geometric_median(coords[:, 0], coords[:, 1], weights)
         centroids = np.array([[med_lat, med_lng]])
         assignments = np.zeros(n_points, dtype=int)
         reassigned = [False] * n_points
-        return centroids, assignments, reassigned
+        reassigned_from = [-1] * n_points
+        init_loads = np.array([float(np.sum(weights))])
+        diverted_out = np.zeros(1)
+        received_in = np.zeros(1)
+        return centroids, assignments, reassigned, reassigned_from, [], init_loads, diverted_out, received_in
 
     # 1. Initial Weighted K-Means
     kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
@@ -119,13 +125,11 @@ def run_capacitated_kmeans(
                 coords[mask, 0], coords[mask, 1], weights[mask]
             )
         else:
-            # Fallback to random point if empty
             rand_idx = np.random.randint(0, n_points)
             centroids[cluster_idx] = coords[rand_idx]
 
     # Iterative refinement of centroids & assignments
     for _ in range(max_iters):
-        # Distance matrix (N, K)
         dist_matrix = np.zeros((n_points, k))
         for i in range(n_points):
             for j in range(k):
@@ -136,7 +140,6 @@ def run_capacitated_kmeans(
 
         new_labels = np.argmin(dist_matrix, axis=1)
 
-        # Update centroids to weighted medians of assigned points
         converged = True
         for cluster_idx in range(k):
             mask = (new_labels == cluster_idx)
@@ -145,7 +148,7 @@ def run_capacitated_kmeans(
                     coords[mask, 0], coords[mask, 1], weights[mask]
                 )
                 shift = haversine_distance(centroids[cluster_idx, 0], centroids[cluster_idx, 1], new_lat, new_lng)
-                if shift > 0.05:  # shift > 50 meters
+                if shift > 0.05:
                     converged = False
                 centroids[cluster_idx] = [new_lat, new_lng]
 
@@ -161,24 +164,36 @@ def run_capacitated_kmeans(
                 centroids[j, 0], centroids[j, 1]
             )
 
-    # 2. Capacity Constraint Enforcement with Regret-Based Reallocation
+    # 2. Capacity Constraint Enforcement with Smart Nearest-Warehouse Redistribution (CASE 1)
     assignments = np.argmin(dist_matrix, axis=1)
-    reassigned = [False] * n_points
+    reassigned_flags = [False] * n_points
+    reassigned_from = [-1] * n_points
 
-    warehouse_loads = np.zeros(k)
+    warehouse_loads = np.zeros(k, dtype=float)
     for i in range(n_points):
-        warehouse_loads[assignments[i]] += weights[i]
+        warehouse_loads[assignments[i]] += float(weights[i])
 
-    # Check if any warehouse exceeds capacity
-    max_reassign_attempts = 100
+    initial_loads = warehouse_loads.copy()
+    orders_diverted_out = np.zeros(k, dtype=float)
+    orders_received_in = np.zeros(k, dtype=float)
+    reallocation_events: List[Dict[str, Any]] = []
+
+    max_reassign_attempts = 200
     attempts = 0
-    while np.any(warehouse_loads > capacity_limit) and attempts < max_reassign_attempts:
+
+    # Continue redistributing as long as there is an overloaded hub AND an underloaded hub with spare space
+    while np.any(warehouse_loads > capacity_limit) and np.any(warehouse_loads < capacity_limit) and attempts < max_reassign_attempts:
         attempts += 1
-        # Find warehouse with largest overload
-        over_wh = int(np.argmax(warehouse_loads))
-        if warehouse_loads[over_wh] <= capacity_limit:
+
+        overloaded_indices = [j for j in range(k) if warehouse_loads[j] > capacity_limit]
+        underloaded_indices = [j for j in range(k) if warehouse_loads[j] < capacity_limit]
+
+        if not overloaded_indices or not underloaded_indices:
             break
 
+        # Pick the warehouse with highest excess demand
+        over_wh = max(overloaded_indices, key=lambda j: warehouse_loads[j] - capacity_limit)
+        
         # Candidates currently in over_wh
         candidates = [i for i in range(n_points) if assignments[i] == over_wh]
         if not candidates:
@@ -188,32 +203,70 @@ def run_capacitated_kmeans(
         best_target_wh = None
         min_penalty = float("inf")
 
+        # Pass 1: Find candidate that fits strictly within available capacity of target warehouse
         for cand_idx in candidates:
             cand_weight = weights[cand_idx]
             curr_dist = dist_matrix[cand_idx, over_wh]
 
-            for target_wh in range(k):
-                if target_wh == over_wh:
-                    continue
-                # Check if target warehouse has space
-                if warehouse_loads[target_wh] + cand_weight <= capacity_limit:
+            for target_wh in underloaded_indices:
+                available_space = capacity_limit - warehouse_loads[target_wh]
+                if cand_weight <= available_space:
                     penalty = dist_matrix[cand_idx, target_wh] - curr_dist
                     if penalty < min_penalty:
                         min_penalty = penalty
                         best_candidate = cand_idx
                         best_target_wh = target_wh
 
+        # Pass 2: If no candidate fits strictly, find the candidate whose move best levels the network
+        if best_candidate is None:
+            for cand_idx in candidates:
+                cand_weight = weights[cand_idx]
+                curr_dist = dist_matrix[cand_idx, over_wh]
+
+                for target_wh in underloaded_indices:
+                    new_target_load = warehouse_loads[target_wh] + cand_weight
+                    if new_target_load < warehouse_loads[over_wh]:
+                        penalty = dist_matrix[cand_idx, target_wh] - curr_dist
+                        if penalty < min_penalty:
+                            min_penalty = penalty
+                            best_candidate = cand_idx
+                            best_target_wh = target_wh
+
         if best_candidate is not None and best_target_wh is not None:
-            # Reassign candidate
-            warehouse_loads[over_wh] -= weights[best_candidate]
-            warehouse_loads[best_target_wh] += weights[best_candidate]
+            cand_weight = float(weights[best_candidate])
+            warehouse_loads[over_wh] -= cand_weight
+            warehouse_loads[best_target_wh] += cand_weight
+            orders_diverted_out[over_wh] += cand_weight
+            orders_received_in[best_target_wh] += cand_weight
+
+            reassigned_from[best_candidate] = over_wh
             assignments[best_candidate] = best_target_wh
-            reassigned[best_candidate] = True
+            reassigned_flags[best_candidate] = True
+
+            reallocation_events.append({
+                "neighborhood_name": neighborhood_names[best_candidate],
+                "orders": int(cand_weight),
+                "from_hub_id": int(over_wh + 1),
+                "from_hub_name": f"Hub {chr(65 + over_wh)}",
+                "to_hub_id": int(best_target_wh + 1),
+                "to_hub_name": f"Hub {chr(65 + best_target_wh)}",
+                "dist_to_original_km": round(float(dist_matrix[best_candidate, over_wh]), 2),
+                "dist_to_target_km": round(float(dist_matrix[best_candidate, best_target_wh]), 2),
+                "extra_dist_km": round(float(dist_matrix[best_candidate, best_target_wh] - dist_matrix[best_candidate, over_wh]), 2)
+            })
         else:
-            # No warehouse has sufficient spare capacity to accept overflow
             break
 
-    return centroids, assignments, reassigned
+    return (
+        centroids,
+        assignments,
+        reassigned_flags,
+        reassigned_from,
+        reallocation_events,
+        initial_loads,
+        orders_diverted_out,
+        orders_received_in
+    )
 
 
 def run_full_optimization(
@@ -283,11 +336,21 @@ def run_full_optimization(
     )
 
     # 3. After (Multi-Warehouse Capacitated Optimization)
-    centroids, assignments, reassigned_flags = run_capacitated_kmeans(
+    (
+        centroids,
+        assignments,
+        reassigned_flags,
+        reassigned_from,
+        reallocation_events,
+        initial_loads,
+        orders_diverted_out,
+        orders_received_in
+    ) = run_capacitated_kmeans(
         coords=coords,
         weights=effective_orders,
         k=settings.num_warehouses,
-        capacity_limit=settings.capacity_limit
+        capacity_limit=settings.capacity_limit,
+        neighborhood_names=[n.name for n in neighborhoods]
     )
 
     # Build Warehouse Location objects
@@ -314,7 +377,11 @@ def run_full_optimization(
             capacity_limit=settings.capacity_limit,
             utilization_pct=util_pct,
             is_over_capacity=(tot_orders > settings.capacity_limit),
-            assigned_neighborhood_count=int(warehouse_neighborhood_counts[j])
+            assigned_neighborhood_count=int(warehouse_neighborhood_counts[j]),
+            initial_unconstrained_orders=int(initial_loads[j]),
+            orders_diverted_out=int(orders_diverted_out[j]),
+            orders_received_in=int(orders_received_in[j]),
+            available_capacity=max(0, settings.capacity_limit - tot_orders)
         ))
 
     # Build Neighborhood Assignments
@@ -353,6 +420,10 @@ def run_full_optimization(
         after_delivery_cost += deliv_cost
         after_travel_time_hours += (time_mins / 60.0) * trips
 
+        orig_wh_idx = reassigned_from[i]
+        orig_wh_id = int(orig_wh_idx + 1) if orig_wh_idx >= 0 else None
+        orig_wh_name = f"Hub {chr(65 + orig_wh_idx)}" if orig_wh_idx >= 0 else None
+
         assignments_list.append(NeighborhoodAssignment(
             neighborhood_id=n.id,
             neighborhood_name=n.name,
@@ -370,7 +441,9 @@ def run_full_optimization(
             delivery_cost_daily=round(deliv_cost, 2),
             is_radius_violation=is_violation,
             radius_overshoot_km=round(overshoot, 2),
-            is_overflow_reassigned=bool(reassigned_flags[i])
+            is_overflow_reassigned=bool(reassigned_flags[i]),
+            reassigned_from_hub_id=orig_wh_id,
+            reassigned_from_hub_name=orig_wh_name
         ))
 
     # After Total Cost
@@ -425,7 +498,7 @@ def run_full_optimization(
     optimal_k = 1
 
     for test_k in range(1, 6):
-        t_cents, t_assigns, _ = run_capacitated_kmeans(
+        t_cents, t_assigns, *_ = run_capacitated_kmeans(
             coords=coords,
             weights=effective_orders,
             k=test_k,
@@ -479,6 +552,11 @@ def run_full_optimization(
     total_effective_orders = int(np.sum(effective_orders))
     cap_util = round((total_effective_orders / total_cap * 100.0), 1) if total_cap > 0 else 0.0
 
+    all_warehouses_at_or_over_cap = all(w.total_orders_assigned >= settings.capacity_limit for w in warehouses)
+    any_overloaded = any(w.is_over_capacity for w in warehouses)
+    is_cap_exceeded = (total_effective_orders > total_cap) or (all_warehouses_at_or_over_cap and any_overloaded)
+    deficit = max(0, total_effective_orders - total_cap)
+
     summary = OptimizationSummary(
         total_neighborhoods=n_count,
         total_daily_orders=total_effective_orders,
@@ -496,7 +574,10 @@ def run_full_optimization(
         overflow_reassignments_count=sum(reassigned_flags),
         fleet_type=settings.fleet_type.value,
         traffic_condition=settings.traffic_condition.value,
-        demand_scaling_factor=round(scaling_factor, 2)
+        demand_scaling_factor=round(scaling_factor, 2),
+        is_total_capacity_exceeded=is_cap_exceeded,
+        capacity_deficit_orders=deficit,
+        reallocation_events=reallocation_events
     )
 
     elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)

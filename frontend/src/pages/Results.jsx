@@ -140,6 +140,102 @@ export default function Results() {
         </div>
       </div>
 
+      {/* CASE 2: Global Network Capacity Exceeded Alert Banner */}
+      {summary.is_total_capacity_exceeded && (
+        <div className="rounded-lg bg-rose-50 border-2 border-rose-400 p-5 shadow-sm space-y-4 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start space-x-3.5">
+              <div className="p-2.5 rounded-lg bg-rose-100 text-rose-700 shrink-0 mt-0.5">
+                <AlertTriangle className="w-6 h-6 text-rose-600" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-base font-bold text-rose-900">
+                    Network Capacity Alert: Order Volume Exceeds Warehouse Capacity
+                  </h3>
+                  <span className="px-2 py-0.5 rounded bg-rose-200 text-rose-800 text-[10px] font-bold uppercase tracking-wider">
+                    All Hubs Full
+                  </span>
+                </div>
+                <p className="text-xs text-rose-800 leading-relaxed max-w-3xl">
+                  Total incoming demand of <strong className="font-semibold">{summary.total_daily_orders.toLocaleString()} orders</strong> exceeds 
+                  the maximum combined capacity of all warehouses (<strong className="font-semibold">{summary.total_capacity.toLocaleString()} orders</strong>) 
+                  by <strong className="font-bold underline">{(summary.capacity_deficit_orders || (summary.total_daily_orders - summary.total_capacity)).toLocaleString()} orders</strong>. 
+                  All facilities are operating at 100%+ capacity, meaning overloaded orders cannot be redistributed to any other warehouse.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0 sm:self-center">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center space-x-2 px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+              >
+                <span>Return to Start Page</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => navigate('/optimize')}
+                className="flex items-center space-x-1.5 px-3.5 py-2.5 rounded-lg bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 text-xs font-semibold transition-all"
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Adjust Settings</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CASE 1: Dynamic Order Redistribution Panel */}
+      {summary.reallocation_events && summary.reallocation_events.length > 0 && (
+        <div className="rounded-lg bg-amber-50/70 border border-amber-300 p-5 shadow-sm space-y-3.5 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-amber-200 pb-3">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-1.5 rounded-md bg-amber-100 text-amber-800">
+                <Zap className="w-4 h-4 text-amber-700" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-amber-950 flex items-center gap-2">
+                  <span>Automated Spillover Capacity Balancing Active</span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
+                    {summary.reallocation_events.length} Corridors Rebalanced
+                  </span>
+                </h3>
+                <p className="text-xs text-amber-800">
+                  One or more warehouses reached capacity while neighboring facilities had spare capacity. Excess demand was dynamically routed to the nearest available hubs.
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-mono font-bold text-amber-900 bg-amber-100 px-2.5 py-1 rounded border border-amber-200">
+              {summary.reallocation_events.reduce((acc, ev) => acc + (ev.orders || 0), 0).toLocaleString()} Total Orders Redistributed
+            </span>
+          </div>
+
+          {/* Reallocation details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {summary.reallocation_events.map((ev, i) => (
+              <div key={i} className="bg-white border border-amber-200/80 rounded-lg p-3 text-xs space-y-1.5 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-900">{ev.neighborhood_name}</span>
+                  <span className="font-mono text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded text-[11px] border border-amber-200">
+                    {ev.orders.toLocaleString()} orders
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1.5 text-slate-600 text-[11px]">
+                  <span className="font-semibold text-rose-700">{ev.from_warehouse_name} (Full)</span>
+                  <ArrowRight className="w-3 h-3 text-amber-600 shrink-0" />
+                  <span className="font-semibold text-emerald-700">{ev.to_warehouse_name} (Absorbed)</span>
+                </div>
+                <div className="text-[10px] text-slate-500 flex justify-between pt-1 border-t border-slate-100">
+                  <span>Redirect Distance Penalty:</span>
+                  <span className="font-mono font-semibold text-slate-700">+{ev.penalty_km} km</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Executive Savings Banner: Light Theme */}
       <div className="rounded-lg bg-slate-50 border border-slate-200 p-6 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -366,8 +462,8 @@ export default function Results() {
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Capacity Load</span>
-                    <strong className={wh.utilization_pct > 90 ? 'text-amber-600' : 'text-emerald-700'}>
-                      {wh.utilization_pct}%
+                    <strong className={wh.utilization_pct > 100 ? 'text-rose-600' : wh.utilization_pct > 90 ? 'text-amber-600' : 'text-emerald-700'}>
+                      {wh.utilization_pct}% {wh.utilization_pct > 100 ? '(Full)' : ''}
                     </strong>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -385,9 +481,27 @@ export default function Results() {
                   </div>
                 </div>
 
+                {/* Capacity Balancing Badges (CASE 1) */}
+                {wh.orders_diverted_out > 0 && (
+                  <div className="text-[11px] px-2.5 py-1 rounded bg-rose-50 border border-rose-200 text-rose-700 font-medium">
+                    Exceeded capacity: <strong>{wh.orders_diverted_out.toLocaleString()}</strong> orders diverted
+                  </div>
+                )}
+                {wh.orders_received_in > 0 && (
+                  <div className="text-[11px] px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 font-medium">
+                    Absorbed <strong>+{wh.orders_received_in.toLocaleString()}</strong> spillover orders
+                  </div>
+                )}
+
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                   <span>Assigned Corridors:</span>
                   <strong className="text-slate-900 font-mono">{wh.assigned_neighborhood_count} nodes</strong>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>Spare Capacity:</span>
+                  <strong className={wh.available_capacity > 0 ? 'text-emerald-700 font-mono' : 'text-rose-600 font-mono'}>
+                    {wh.available_capacity > 0 ? `${wh.available_capacity.toLocaleString()} orders` : '0 (At Limit)'}
+                  </strong>
                 </div>
               </div>
             );
@@ -457,8 +571,8 @@ export default function Results() {
                         Radius Alert (+{a.radius_overshoot_km} km)
                       </span>
                     ) : a.is_overflow_reassigned ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                        Overflow Reassigned
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300" title={`Reassigned from ${a.reassigned_from_hub_name || 'full hub'} to ${a.assigned_warehouse_name}`}>
+                        {a.reassigned_from_hub_name ? `Diverted: ${a.reassigned_from_hub_name} → ${a.assigned_warehouse_name}` : 'Spillover Reassigned'}
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">

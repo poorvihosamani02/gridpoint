@@ -94,6 +94,10 @@ class WarehouseLocation(BaseModel):
     utilization_pct: float
     is_over_capacity: bool
     assigned_neighborhood_count: int
+    initial_unconstrained_orders: int = 0
+    orders_diverted_out: int = 0
+    orders_received_in: int = 0
+    available_capacity: int = 0
 
 
 class NeighborhoodAssignment(BaseModel):
@@ -114,6 +118,8 @@ class NeighborhoodAssignment(BaseModel):
     is_radius_violation: bool
     radius_overshoot_km: float
     is_overflow_reassigned: bool
+    reassigned_from_hub_id: Optional[int] = None
+    reassigned_from_hub_name: Optional[str] = None
 
 
 class BeforeAfterComparison(BaseModel):
@@ -176,6 +182,9 @@ class OptimizationSummary(BaseModel):
     fleet_type: str
     traffic_condition: str
     demand_scaling_factor: float
+    is_total_capacity_exceeded: bool = False
+    capacity_deficit_orders: int = 0
+    reallocation_events: List[Dict[str, Any]] = []
 
 
 class OptimizationResponse(BaseModel):

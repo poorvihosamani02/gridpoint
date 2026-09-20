@@ -806,6 +806,36 @@ export async function generateOptimizationPDF(results, neighborhoods, settings) 
 
   const chartImg = generateBeforeAfterChartCanvas(before_after);
   doc.addImage(chartImg, 'PNG', margin, y, contentWidth, 58);
+  y += 60;
+
+  // Capacity Overload or Rebalancing Alert Callout on Page 1
+  if (summary.is_total_capacity_exceeded) {
+    doc.setFillColor(254, 242, 242);
+    doc.setDrawColor(248, 113, 113);
+    doc.roundedRect(margin, y, contentWidth, 15, 1.5, 1.5, 'FD');
+    doc.setTextColor(185, 28, 28);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.2);
+    doc.text('NETWORK CAPACITY OVERLOAD ALERT: DEMAND EXCEEDS COMBINED CAPACITY', margin + 4, y + 5);
+    doc.setTextColor(127, 29, 29);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.2);
+    const alertMsg = `Total demand (${summary.total_daily_orders.toLocaleString()} orders) exceeds combined warehouse capacity (${summary.total_capacity.toLocaleString()} orders) by ${((summary.capacity_deficit_orders || (summary.total_daily_orders - summary.total_capacity))).toLocaleString()} orders. All hubs are saturated.`;
+    doc.text(doc.splitTextToSize(alertMsg, contentWidth - 8), margin + 4, y + 9.5);
+  } else if (summary.reallocation_events && summary.reallocation_events.length > 0) {
+    doc.setFillColor(254, 243, 199);
+    doc.setDrawColor(245, 158, 11);
+    doc.roundedRect(margin, y, contentWidth, 15, 1.5, 1.5, 'FD');
+    doc.setTextColor(180, 83, 9);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.2);
+    doc.text(`DYNAMIC SPILLOVER CAPACITY BALANCING ACTIVE (${summary.reallocation_events.length} CORRIDORS REASSIGNED)`, margin + 4, y + 5);
+    doc.setTextColor(146, 64, 14);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.2);
+    const balMsg = `One or more warehouses reached capacity while nearby facilities had spare capacity. Excess demand corridors were automatically redirected to the nearest available hubs.`;
+    doc.text(doc.splitTextToSize(balMsg, contentWidth - 8), margin + 4, y + 9.5);
+  }
 
   // =========================================================================
   // PAGE 2: GEOSPATIAL MAP PICTURE & WAREHOUSE CLUSTER AUDIT
@@ -881,8 +911,9 @@ export async function generateOptimizationPDF(results, neighborhoods, settings) 
     doc.setFont('helvetica', 'bold');
     doc.text(`${wh.total_orders_assigned.toLocaleString()} orders/day`, hubCols[2], y + 5);
 
-    doc.setTextColor(wh.utilization_pct > 90 ? 217 : 4, wh.utilization_pct > 90 ? 119 : 120, wh.utilization_pct > 90 ? 6 : 87);
-    doc.text(`${wh.utilization_pct}% of ${wh.capacity_limit.toLocaleString()} cap`, hubCols[3], y + 5);
+    doc.setTextColor(wh.utilization_pct > 100 ? 220 : wh.utilization_pct > 90 ? 217 : 4, wh.utilization_pct > 100 ? 38 : wh.utilization_pct > 90 ? 119 : 120, wh.utilization_pct > 100 ? 38 : wh.utilization_pct > 90 ? 6 : 87);
+    const divertTag = wh.orders_diverted_out > 0 ? ` (Diverted ${wh.orders_diverted_out})` : (wh.orders_received_in > 0 ? ` (+${wh.orders_received_in})` : '');
+    doc.text(`${wh.utilization_pct}% of ${wh.capacity_limit.toLocaleString()} cap${divertTag}`, hubCols[3], y + 5);
 
     doc.setTextColor(100, 116, 139);
     doc.setFont('helvetica', 'normal');
