@@ -17,13 +17,15 @@ import {
   ArrowRight,
   Zap,
   Building,
-  AlertTriangle
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import MetricCard from '../components/MetricCard';
 import TradeoffChart from '../components/TradeoffChart';
 import LeafletMap from '../components/LeafletMap';
 import { WAREHOUSE_COLORS } from '../utils/sampleData';
+import { generateOptimizationPDF } from '../utils/pdfReportGenerator';
 
 export default function Results() {
   const { results, neighborhoods, settings } = useApp();
@@ -65,7 +67,21 @@ export default function Results() {
     return matchesHub && matchesSearch;
   });
 
-  // Export results JSON
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  // Export comprehensive PDF report
+  const handleExportPDF = async () => {
+    try {
+      setIsGeneratingPDF(true);
+      await generateOptimizationPDF(results, neighborhoods, settings);
+    } catch (err) {
+      console.error('PDF export failed:', err);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  // Export results JSON (Kept active as secondary option)
   const handleExportJSON = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(results, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -101,12 +117,25 @@ export default function Results() {
             <span>Tune Parameters</span>
           </button>
 
+          {/* Primary Download: Comprehensive PDF Report */}
           <button
-            onClick={handleExportJSON}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
+            onClick={handleExportPDF}
+            disabled={isGeneratingPDF}
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+            title="Download comprehensive PDF report with explanation tables, charts & map"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Export Report (JSON)</span>
+            <span>{isGeneratingPDF ? 'Generating PDF...' : 'Download Report (PDF)'}</span>
+          </button>
+
+          {/* Secondary Data Export: JSON */}
+          <button
+            onClick={handleExportJSON}
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 transition-colors"
+            title="Download raw data JSON"
+          >
+            <FileText className="w-3.5 h-3.5 text-slate-400" />
+            <span>JSON Data</span>
           </button>
         </div>
       </div>
