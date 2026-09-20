@@ -1,140 +1,159 @@
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Building2, 
   Database, 
   Sliders, 
   BarChart3, 
   Sparkles,
-  CheckCircle2,
-  AlertCircle
+  ArrowRight,
+  Menu,
+  X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import Logo from './Logo';
 
 export default function Navbar() {
   const { backendStatus, neighborhoods, results, loadSampleData } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // CHANGE 3: Removed standalone '/map' from navigation
   const navItems = [
     { to: '/', label: 'Dashboard', icon: Building2 },
-    { to: '/data', label: 'Data Management', icon: Database, badge: neighborhoods.length },
+    { to: '/data', label: 'Data Management', icon: Database, badge: neighborhoods.length > 0 ? neighborhoods.length : null },
     { to: '/optimize', label: 'Optimization', icon: Sliders },
-    { to: '/results', label: 'Analytics & Results', icon: BarChart3, highlight: Boolean(results) },
+    { to: '/results', label: 'Analytics & Results', icon: BarChart3, hasResults: Boolean(results) },
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-3 z-50 w-full px-4 sm:px-6 pointer-events-none">
+      <div className="max-w-4xl mx-auto pointer-events-auto">
+        {/* FLOATING DARK CAPSULE HEADER (as shown in reference design) */}
+        <div className="floating-capsule-nav rounded-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between transition-all backdrop-blur-md">
           
-          {/* Logo & Brand: Minimalist, Bold & Professional */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-xl tracking-tight text-slate-900">
-                  GridPoint
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200">
-                  SaaS v1.0
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium">Warehouse Location Optimization</p>
-            </div>
+          {/* Standout Logo & Brand */}
+          <div 
+            className="flex items-center space-x-2 cursor-pointer hover:opacity-95 transition-opacity" 
+            onClick={() => navigate('/')}
+            title="GridPoint Logistics Intelligence"
+          >
+            <Logo size="sm" variant="dark" />
           </div>
 
-          {/* Horizontal Navigation Links: Clean White & Royal Blue Active State */}
-          <nav className="hidden md:flex items-center space-x-1">
+          {/* Desktop Navigation Sections in the Capsule */}
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-1.5">
             {navItems.map((item) => {
-              const Icon = item.icon;
+              const isActive = location.pathname === item.to;
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-600 border border-blue-200 shadow-sm font-semibold'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
-                    }`
-                  }
+                  className={`relative px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-normal transition-all flex items-center space-x-1.5 ${
+                    isActive
+                      ? 'bg-white/15 text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
                 >
-                  <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
-                  {item.badge !== undefined && (
-                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                  {item.badge !== null && item.badge !== undefined && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-blue-500/30 text-blue-300 border border-blue-400/30">
                       {item.badge}
                     </span>
                   )}
-                  {item.highlight && (
-                    <span className="relative flex h-2 w-2 ml-1">
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
+                  {item.hasResults && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                   )}
                 </NavLink>
               );
             })}
           </nav>
 
-          {/* Right Section: Sample data trigger & Backend indicator */}
-          <div className="flex items-center space-x-3">
+          {/* Right Action / Status Pill */}
+          <div className="hidden sm:flex items-center space-x-2.5">
+            {/* Backend API Status Pill */}
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-slate-300">
+              <span className={`w-1.5 h-1.5 rounded-full ${backendStatus === 'online' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
+              <span className="font-mono text-[10px] text-slate-300 font-medium">
+                {backendStatus === 'online' ? 'API Active' : 'Checking'}
+              </span>
+            </div>
+
+            {/* Quick Action Button */}
+            <button
+              onClick={() => {
+                if (location.pathname === '/') {
+                  navigate('/data');
+                } else if (location.pathname === '/data') {
+                  navigate('/optimize');
+                } else if (location.pathname === '/optimize') {
+                  navigate('/results');
+                } else {
+                  navigate('/data');
+                }
+              }}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-900 bg-white hover:bg-slate-100 transition-all shadow-sm active:scale-95 cursor-pointer"
+            >
+              <span>{location.pathname === '/results' ? 'New Plan' : 'Start'}</span>
+              <ArrowRight className="w-3 h-3 text-slate-900" />
+            </button>
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <div className="flex md:hidden items-center space-x-2">
+            <button
+              onClick={() => navigate('/data')}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-900 bg-white"
+            >
+              Start
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-1.5 rounded-full text-slate-300 hover:text-white bg-white/10"
+              aria-label="Toggle Navigation"
+            >
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          </div>
+
+        </div>
+
+        {/* Mobile Dropdown Menu if toggled */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-2 p-3 bg-slate-950/95 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col space-y-1 text-xs">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-xl flex items-center justify-between font-medium transition-colors ${
+                    isActive ? 'bg-white/15 text-white font-bold' : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <span>{item.label}</span>
+                {item.badge !== null && item.badge !== undefined && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-300">
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            ))}
             {neighborhoods.length === 0 && (
               <button
-                onClick={loadSampleData}
-                className="hidden lg:flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+                onClick={() => {
+                  loadSampleData();
+                  setMobileMenuOpen(false);
+                }}
+                className="mt-1 w-full text-left px-3 py-2 rounded-xl text-blue-400 bg-blue-950/40 flex items-center space-x-2"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Load Sample BLR</span>
+                <span>Load Sample BLR Corridors</span>
               </button>
             )}
-
-            {/* Backend status indicator */}
-            <div className="flex items-center space-x-2 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">
-              {backendStatus === 'online' ? (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                  <span className="text-emerald-700 font-semibold text-[11px]">API Online</span>
-                </>
-              ) : backendStatus === 'checking' ? (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                  <span className="text-amber-700 font-medium text-[11px]">Connecting...</span>
-                </>
-              ) : (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-                  <span className="text-rose-700 font-medium text-[11px]">API Offline</span>
-                </>
-              )}
-            </div>
           </div>
-        </div>
-      </div>
-      
-      {/* Mobile Horizontal Bar */}
-      <div className="md:hidden flex overflow-x-auto border-t border-slate-200 px-2 py-2 gap-1 bg-white">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center space-x-1 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600 border border-blue-200 font-semibold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`
-              }
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{item.label}</span>
-            </NavLink>
-          );
-        })}
+        )}
       </div>
     </header>
   );

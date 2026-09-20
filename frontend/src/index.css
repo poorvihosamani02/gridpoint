@@ -8,8 +8,8 @@
   }
 
   body {
-    @apply bg-white text-slate-900 font-sans antialiased;
-    background-color: #ffffff;
+    @apply bg-[#fafafa] text-slate-900 font-sans antialiased;
+    background-color: #fafafa;
     color: #0f172a;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -19,42 +19,10 @@
 }
 
 /* ==========================================================================
-   GLOBAL SAAS UI OVERRIDES: STRICT LIGHT THEME
+   GLOBAL SAAS UI STYLING: CRISP LIGHT THEME WITH FLOATING DARK CAPSULES
    ========================================================================== */
 
-/* Cards & Containers: Flat white with subtle 1px gray borders and restrained radii */
-.bg-slate-900,
-.bg-slate-900\/40,
-.bg-slate-900\/50,
-.bg-slate-900\/60,
-.bg-slate-900\/70,
-.bg-slate-900\/80,
-.bg-slate-900\/90,
-.bg-slate-900\/95,
-.bg-slate-950,
-.bg-slate-950\/40,
-.bg-slate-950\/60,
-.bg-slate-950\/80 {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
-}
-
-/* Header Navbar: Clean white with subtle bottom border */
-header {
-  background-color: #ffffff !important;
-  border-bottom: 1px solid #e2e8f0 !important;
-}
-
-/* Footer: Clean light gray border and text */
-footer {
-  background-color: #f8fafc !important;
-  border-top: 1px solid #e2e8f0 !important;
-  color: #64748b !important;
-}
-
-/* Primary Buttons: Solid Royal Blue with White Text */
+/* Primary Buttons: Solid Royal Blue */
 button.bg-gradient-to-r,
 .bg-gradient-to-r.from-brand-600,
 .bg-brand-600 {
@@ -71,7 +39,7 @@ button.bg-gradient-to-r:hover,
   background-color: #1d4ed8 !important;
 }
 
-/* Secondary Buttons: White with subtle gray border */
+/* Secondary Buttons */
 button.bg-slate-800,
 .bg-slate-800 {
   background-color: #ffffff !important;
@@ -86,91 +54,50 @@ button.bg-slate-800:hover,
   border-color: #cbd5e1 !important;
 }
 
-/* Secondary Light Blue Accent Buttons */
-.bg-brand-500\/10,
-.bg-brand-500\/15,
-.bg-brand-500\/20 {
-  background-color: #eff6ff !important;
-  color: #2563eb !important;
-  border-color: #bfdbfe !important;
-}
-
-.bg-brand-500\/10:hover,
-.bg-brand-500\/20:hover {
-  background-color: #dbeafe !important;
-}
-
-/* Neutralize decorative multi-color blur blobs and gradients */
-.blur-3xl, .blur-2xl {
-  display: none !important;
-}
-
-/* Overwrite gradient banners with clean light cards */
-section.bg-gradient-to-b,
-.bg-gradient-to-r.from-emerald-950\/60 {
-  background-image: none !important;
-  background-color: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-}
-
-/* Text color adaptations */
-.text-white {
-  color: #0f172a !important;
-}
-
-.text-slate-300,
-.text-slate-400 {
-  color: #475569 !important;
-}
-
-.text-slate-500 {
-  color: #64748b !important;
-}
-
 /* Input elements in tables and forms */
-input[type="text"],
-input[type="number"],
-select {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #cbd5e1 !important;
+input[type="text"]:not(.dark-input),
+input[type="number"]:not(.dark-input),
+select:not(.dark-input) {
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
 }
 
 input[type="range"] {
-  background-color: #e2e8f0 !important;
+  background-color: #e2e8f0;
 }
 
 input[type="text"]:focus,
 input[type="number"]:focus,
 select:focus {
-  border-color: #2563eb !important;
-  outline: none !important;
-  box-shadow: 0 0 0 1px #2563eb !important;
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 1px #2563eb;
 }
 
-/* Disable distracting animations */
-.animate-ping,
-.animate-pulse {
-  animation: none !important;
-  opacity: 1 !important;
+/* Floating Black Capsule Navigation Bar (as in reference design) */
+.floating-capsule-nav {
+  background-color: #050811 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Demo Video Map Container */
+.demo-video-box {
+  background-color: #080c18 !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
 }
 
 /* ==========================================================================
-   LEAFLET MAP: CRISP LIGHT THEME
+   LEAFLET MAP: CRISP TILES & DEMO VIDEO STYLING
    ========================================================================== */
 
 .leaflet-container {
   width: 100%;
   height: 100%;
-  border-radius: 0.5rem !important;
   font-family: inherit;
-  background-color: #f8fafc !important;
-  border: 1px solid #e2e8f0;
-}
-
-/* Clean, crisp light map tiles (no dark invert filter) */
-.leaflet-tile {
-  filter: none !important;
 }
 
 /* Clean White Popups */
@@ -188,16 +115,50 @@ select:focus {
   border: 1px solid #e2e8f0 !important;
 }
 
-/* Minimalist Pin Shadows */
+/* Custom Warehouse Pins */
 .custom-warehouse-pin div {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
 }
 
-/* Steady red boundary for violations */
-.pulse-violation {
-  animation: none !important;
-  stroke: #dc2626 !important;
-  stroke-width: 2px !important;
+/* Animated Radar Wave for Demo Video */
+@keyframes radar-ripple {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.radar-pulse-ring {
+  animation: radar-ripple 2.4s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+/* Dash Flow Animation for Route Lines in Demo Video */
+@keyframes dash-travel {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+.animated-route-flow {
+  stroke-dasharray: 6, 8;
+  animation: dash-travel 1.6s linear infinite;
+}
+
+/* Subtle Video Scanline effect */
+.video-scanline {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.2)
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
 }
 
 /* ==========================================================================
@@ -205,21 +166,21 @@ select:focus {
    ========================================================================== */
 
 table {
-  border-color: #e2e8f0 !important;
+  border-color: #e2e8f0;
 }
 
 thead {
-  background-color: #f8fafc !important;
-  color: #475569 !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  background-color: #f8fafc;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 tbody tr {
-  border-bottom: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 tbody tr:hover {
-  background-color: #f8fafc !important;
+  background-color: #f8fafc;
 }
 
 ::-webkit-scrollbar {
