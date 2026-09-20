@@ -4,13 +4,13 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
-    @apply bg-slate-950 text-slate-100 font-sans antialiased;
-    background-color: #0a101d;
-    color: #f8fafc;
+    @apply bg-white text-slate-900 font-sans antialiased;
+    background-color: #ffffff;
+    color: #0f172a;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -19,153 +19,220 @@
 }
 
 /* ==========================================================================
-   MINIMAL LOGISTICS SAAS THEME OVERRIDES (Clean, Data-Driven, No Heavy Gradients)
+   GLOBAL SAAS UI OVERRIDES: STRICT LIGHT THEME
    ========================================================================== */
 
-/* Neutralize distracting decorative blur orbs */
+/* Cards & Containers: Flat white with subtle 1px gray borders and restrained radii */
+.bg-slate-900,
+.bg-slate-900\/40,
+.bg-slate-900\/50,
+.bg-slate-900\/60,
+.bg-slate-900\/70,
+.bg-slate-900\/80,
+.bg-slate-900\/90,
+.bg-slate-900\/95,
+.bg-slate-950,
+.bg-slate-950\/40,
+.bg-slate-950\/60,
+.bg-slate-950\/80 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Header Navbar: Clean white with subtle bottom border */
+header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Footer: Clean light gray border and text */
+footer {
+  background-color: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+/* Primary Buttons: Solid Royal Blue with White Text */
+button.bg-gradient-to-r,
+.bg-gradient-to-r.from-brand-600,
+.bg-brand-600 {
+  background-image: none !important;
+  background-color: #2563eb !important;
+  border: 1px solid #1d4ed8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.2) !important;
+}
+
+button.bg-gradient-to-r:hover,
+.bg-gradient-to-r.from-brand-600:hover,
+.bg-brand-600:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Secondary Buttons: White with subtle gray border */
+button.bg-slate-800,
+.bg-slate-800 {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+button.bg-slate-800:hover,
+.bg-slate-800:hover {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Secondary Light Blue Accent Buttons */
+.bg-brand-500\/10,
+.bg-brand-500\/15,
+.bg-brand-500\/20 {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+  border-color: #bfdbfe !important;
+}
+
+.bg-brand-500\/10:hover,
+.bg-brand-500\/20:hover {
+  background-color: #dbeafe !important;
+}
+
+/* Neutralize decorative multi-color blur blobs and gradients */
 .blur-3xl, .blur-2xl {
   display: none !important;
 }
 
-/* Solid, professional Blue buttons (replace rainbow multi-color gradients) */
-button.bg-gradient-to-r,
-.bg-gradient-to-r.from-brand-600 {
-  background-image: none !important;
-  background-color: #2563eb !important; /* Action Blue */
-  border: 1px solid #1d4ed8 !important;
-  color: #ffffff !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
-}
-
-button.bg-gradient-to-r:hover,
-.bg-gradient-to-r.from-brand-600:hover {
-  background-color: #1d4ed8 !important;
-}
-
-/* Clean up hero section: replace heavy multi-color background with solid Deep Navy panel */
-section.bg-gradient-to-b {
-  background-image: none !important;
-  background-color: #0e1726 !important;
-  border: 1px solid #1e293b !important;
-}
-
-/* Replace rainbow gradient text with crisp clean white & subtle blue */
-.bg-gradient-to-r.from-brand-400.via-cyan-300 {
-  background-image: none !important;
-  -webkit-background-clip: unset !important;
-  background-clip: unset !important;
-  color: #38bdf8 !important; /* Crisp Sky Blue */
-}
-
-.bg-gradient-to-r.from-white.via-slate-100 {
-  background-image: none !important;
-  -webkit-background-clip: unset !important;
-  background-clip: unset !important;
-  color: #ffffff !important;
-}
-
-/* Clean, flat executive savings banner (replace dark-green radial gradient) */
+/* Overwrite gradient banners with clean light cards */
+section.bg-gradient-to-b,
 .bg-gradient-to-r.from-emerald-950\/60 {
   background-image: none !important;
-  background-color: #0e1726 !important;
-  border: 1px solid #1e293b !important;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
 }
 
-/* Disable excessive ping animations on status indicators (solid, clean indicators) */
-.animate-ping {
-  display: none !important;
+/* Text color adaptations */
+.text-white {
+  color: #0f172a !important;
 }
 
+.text-slate-300,
+.text-slate-400 {
+  color: #475569 !important;
+}
+
+.text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Input elements in tables and forms */
+input[type="text"],
+input[type="number"],
+select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+input[type="range"] {
+  background-color: #e2e8f0 !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  border-color: #2563eb !important;
+  outline: none !important;
+  box-shadow: 0 0 0 1px #2563eb !important;
+}
+
+/* Disable distracting animations */
+.animate-ping,
 .animate-pulse {
   animation: none !important;
   opacity: 1 !important;
 }
 
 /* ==========================================================================
-   CARDS, BORDERS & SHADOWS (Structured, 6-10px Radii, Subtle 1px Dividers)
-   ========================================================================== */
-
-/* Universal SaaS card styling */
-.bg-slate-900\/60,
-.bg-slate-900\/70,
-.bg-slate-900\/80,
-.bg-slate-900\/90 {
-  background-color: #0e1726 !important;
-  border-color: #1e293b !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-header {
-  background-color: #0a101d !important;
-  border-color: #1e293b !important;
-  backdrop-filter: none !important;
-}
-
-/* Clean subtle hover states on data rows & cards */
-.hover\:border-slate-700:hover {
-  border-color: #334155 !important;
-}
-
-/* ==========================================================================
-   LEAFLET MAP & GEOSPATIAL DATA STYLING
+   LEAFLET MAP: CRISP LIGHT THEME
    ========================================================================== */
 
 .leaflet-container {
   width: 100%;
   height: 100%;
-  border-radius: 0.5rem !important; /* 8px SaaS border-radius */
-  font-family: inherit;
-  background-color: #0a101d !important;
-}
-
-/* Crisp dark navy map tiles (data-centric CartoDB contrast) */
-.leaflet-tile {
-  filter: brightness(0.62) invert(1) contrast(2.4) hue-rotate(205deg) saturate(0.2) brightness(0.75);
-}
-
-/* Professional data popups */
-.custom-leaflet-popup .leaflet-popup-content-wrapper {
-  background: #0e1726 !important;
-  color: #f8fafc !important;
-  border: 1px solid #1e293b !important;
   border-radius: 0.5rem !important;
-  box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.5) !important;
+  font-family: inherit;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0;
+}
+
+/* Clean, crisp light map tiles (no dark invert filter) */
+.leaflet-tile {
+  filter: none !important;
+}
+
+/* Clean White Popups */
+.custom-leaflet-popup .leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
   padding: 0.25rem !important;
 }
 
 .custom-leaflet-popup .leaflet-popup-tip {
-  background: #0e1726 !important;
-  border: 1px solid #1e293b !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
 }
 
-/* Warehouse Pin Marker (Solid, minimal, no neon glow) */
+/* Minimalist Pin Shadows */
 .custom-warehouse-pin div {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Steady, minimal SLA constraint violation indicator (solid red border, no pulsing ring) */
+/* Steady red boundary for violations */
 .pulse-violation {
   animation: none !important;
-  stroke: #ef4444 !important;
+  stroke: #dc2626 !important;
   stroke-width: 2px !important;
 }
 
 /* ==========================================================================
-   SCROLLBARS & TABLE UTILITIES
+   TABLES & SCROLLBARS
    ========================================================================== */
 
+table {
+  border-color: #e2e8f0 !important;
+}
+
+thead {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+tbody tr {
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a101d;
+  background: #f8fafc;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 2px;
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #94a3b8;
 }

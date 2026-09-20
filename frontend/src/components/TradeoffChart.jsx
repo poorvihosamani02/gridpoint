@@ -15,8 +15,8 @@ import {
 export default function TradeoffChart({ data = [] }) {
   if (!data || data.length === 0) {
     return (
-      <div className="h-72 flex items-center justify-center text-slate-500 text-sm">
-        Run optimization to view trade-off curve
+      <div className="h-64 flex items-center justify-center text-slate-400 text-xs">
+        Run optimization to calculate trade-off curve
       </div>
     );
   }
@@ -30,58 +30,58 @@ export default function TradeoffChart({ data = [] }) {
     <div className="w-full">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
-          <h4 className="text-sm font-semibold text-white">Infrastructure vs. Delivery Cost Trade-off Curve</h4>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Balancing fixed warehouse lease costs against delivery distance & fuel costs across K = 1 to 5.
+          <h4 className="text-sm font-bold text-slate-900">Infrastructure vs. Delivery Cost Trade-off Curve</h4>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Balancing fixed facility lease overhead against variable fleet delivery costs across K = 1 to 5.
           </p>
         </div>
         {optimalPoint && (
-          <div className="flex items-center space-x-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
             <span>Optimal Sweet Spot:</span>
-            <span className="font-bold underline">{optimalPoint.num_warehouses} Warehouses</span>
+            <span className="font-bold underline">{optimalPoint.num_warehouses} Hubs</span>
             <span>(₹{optimalPoint.total_cost.toLocaleString()}/day)</span>
           </div>
         )}
       </div>
 
-      <div className="h-80 w-full">
+      <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+          <ComposedChart data={data} margin={{ top: 15, right: 15, bottom: 15, left: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.8} />
             <XAxis
               dataKey="num_warehouses"
-              stroke="#94a3b8"
+              stroke="#64748b"
               tickFormatter={(val) => `${val} Hubs`}
-              tick={{ fill: '#94a3b8', fontSize: 12 }}
+              tick={{ fill: '#64748b', fontSize: 12 }}
             />
             <YAxis
-              stroke="#94a3b8"
+              stroke="#64748b"
               tickFormatter={formatCurrency}
-              tick={{ fill: '#94a3b8', fontSize: 12 }}
+              tick={{ fill: '#64748b', fontSize: 12 }}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#0f172a',
-                borderColor: '#334155',
-                borderRadius: '0.5rem',
-                color: '#f8fafc',
-                fontSize: '12px'
+                backgroundColor: '#ffffff',
+                borderColor: '#e2e8f0',
+                borderRadius: '0.375rem',
+                color: '#0f172a',
+                fontSize: '12px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
               }}
               formatter={(value, name) => [`₹${Number(value).toLocaleString()}`, name]}
               labelFormatter={(label) => `${label} Warehouse Facilities`}
             />
             <Legend
-              wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
+              wrapperStyle={{ paddingTop: '8px', fontSize: '11px' }}
               iconType="circle"
             />
             
-            {/* Fixed Warehouse Infrastructure Cost (Bar) */}
+            {/* Fixed Warehouse Cost (Bar) */}
             <Bar
               dataKey="fixed_cost"
-              name="Fixed Warehouse Cost"
-              fill="#64748b"
-              opacity={0.4}
-              radius={[4, 4, 0, 0]}
+              name="Fixed Warehouse Lease"
+              fill="#cbd5e1"
+              radius={[3, 3, 0, 0]}
               barSize={24}
             />
             {/* Variable Delivery Cost (Line) */}
@@ -89,9 +89,9 @@ export default function TradeoffChart({ data = [] }) {
               type="monotone"
               dataKey="delivery_cost"
               name="Delivery & Fuel Cost"
-              stroke="#0ea5e9"
+              stroke="#2563eb"
               strokeWidth={2}
-              dot={{ r: 4, fill: '#0ea5e9' }}
+              dot={{ r: 4, fill: '#2563eb' }}
             />
             {/* Grand Total Cost Curve (Line) */}
             <Line
@@ -99,15 +99,15 @@ export default function TradeoffChart({ data = [] }) {
               dataKey="total_cost"
               name="Total Operational Cost"
               stroke="#10b981"
-              strokeWidth={3.5}
-              dot={{ r: 6, fill: '#10b981' }}
+              strokeWidth={3}
+              dot={{ r: 5, fill: '#10b981' }}
             />
 
             {optimalPoint && (
               <ReferenceDot
                 x={optimalPoint.num_warehouses}
                 y={optimalPoint.total_cost}
-                r={8}
+                r={7}
                 fill="#10b981"
                 stroke="#ffffff"
                 strokeWidth={2}
@@ -116,9 +116,6 @@ export default function TradeoffChart({ data = [] }) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-[11px] text-slate-500 italic text-center mt-1">
-        • As warehouse count expands, delivery distances fall (decreasing delivery costs), but each facility adds fixed daily operating expense.
-      </p>
     </div>
   );
 }

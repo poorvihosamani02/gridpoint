@@ -12,7 +12,7 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import { WAREHOUSE_COLORS } from '../utils/sampleData';
-import { Layers, Eye, AlertTriangle, Building, Navigation } from 'lucide-react';
+import { Layers, AlertTriangle, Building, Navigation } from 'lucide-react';
 
 // Center of Bengaluru
 const BENGALURU_CENTER = [12.9716, 77.5946];
@@ -23,7 +23,7 @@ function MapRecenter({ bounds }) {
   useEffect(() => {
     if (bounds && bounds.length > 0) {
       try {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
       } catch (e) {
         // Fallback
       }
@@ -32,7 +32,7 @@ function MapRecenter({ bounds }) {
   return null;
 }
 
-// Generate custom DivIcon for Warehouses
+// Generate clean, solid DivIcon for Warehouses (No heavy neon blur)
 function createWarehouseIcon(hubIndex, name, isOverCapacity) {
   const color = WAREHOUSE_COLORS[hubIndex % WAREHOUSE_COLORS.length];
   const char = String.fromCharCode(65 + hubIndex);
@@ -45,36 +45,34 @@ function createWarehouseIcon(hubIndex, name, isOverCapacity) {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 38px;
-        height: 38px;
-        background: radial-gradient(circle, ${color} 0%, #0f172a 100%);
-        border: 2.5px solid ${isOverCapacity ? '#ef4444' : '#ffffff'};
+        width: 32px;
+        height: 32px;
+        background: ${color};
+        border: 2px solid ${isOverCapacity ? '#dc2626' : '#ffffff'};
         border-radius: 50%;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.6), 0 0 12px ${color}88;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
         cursor: pointer;
-        transition: transform 0.2s;
       ">
         <span style="
           color: #ffffff;
           font-weight: 800;
-          font-size: 14px;
+          font-size: 13px;
           font-family: monospace;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         ">${char}</span>
         <div style="
           position: absolute;
-          bottom: -6px;
+          bottom: -5px;
           width: 0;
           height: 0;
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-top: 7px solid #0f172a;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 6px solid ${color};
         "></div>
       </div>
     `,
-    iconSize: [38, 38],
-    iconAnchor: [19, 38],
-    popupAnchor: [0, -38]
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
   });
 }
 
@@ -85,13 +83,12 @@ export default function LeafletMap({
   showLines = true,
   showRadiusRings = true,
   filterWarehouseId = 'all',
-  height = '600px'
+  height = '500px'
 }) {
   const [internalShowLines, setInternalShowLines] = useState(showLines);
   const [internalShowRadius, setInternalShowRadius] = useState(showRadiusRings);
   const [activeFilter, setActiveFilter] = useState(filterWarehouseId);
 
-  // Sync props to state
   useEffect(() => {
     setInternalShowLines(showLines);
   }, [showLines]);
@@ -125,17 +122,18 @@ export default function LeafletMap({
   }, [results]);
 
   return (
-    <div className="relative w-full rounded-xl overflow-hidden border border-slate-800 shadow-2xl" style={{ height }}>
-      {/* Map Control Bar Overlay */}
-      <div className="absolute top-4 right-4 z-[400] flex flex-wrap items-center gap-2 bg-slate-900/90 backdrop-blur-md p-2 rounded-xl border border-slate-800 shadow-lg text-xs">
+    <div className="relative w-full rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-50" style={{ height }}>
+      
+      {/* Map Control Bar: Crisp Light Theme */}
+      <div className="absolute top-3 right-3 z-[400] flex flex-wrap items-center gap-1.5 bg-white/95 p-1.5 rounded-md border border-slate-200 shadow-sm text-xs">
         <button
           onClick={() => setInternalShowLines(!internalShowLines)}
-          className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border transition-all ${
+          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded border text-xs font-medium transition-colors ${
             internalShowLines
-              ? 'bg-brand-500/20 text-brand-300 border-brand-500/30'
-              : 'bg-slate-800 text-slate-400 border-slate-700'
+              ? 'bg-blue-50 text-blue-700 border-blue-200'
+              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
           }`}
-          title="Toggle Hub-to-Neighborhood Routes"
+          title="Toggle Assignment Routes"
         >
           <Navigation className="w-3.5 h-3.5" />
           <span>Routes</span>
@@ -143,22 +141,22 @@ export default function LeafletMap({
 
         <button
           onClick={() => setInternalShowRadius(!internalShowRadius)}
-          className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border transition-all ${
+          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded border text-xs font-medium transition-colors ${
             internalShowRadius
-              ? 'bg-brand-500/20 text-brand-300 border-brand-500/30'
-              : 'bg-slate-800 text-slate-400 border-slate-700'
+              ? 'bg-blue-50 text-blue-700 border-blue-200'
+              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
           }`}
-          title="Toggle Max Delivery Radius Range Rings"
+          title="Toggle Max Delivery Radius Perimeter"
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>Radius Rings ({maxDeliveryRadiusKm}km)</span>
+          <span>Radius ({maxDeliveryRadiusKm}km)</span>
         </button>
 
         {results && results.warehouses && results.warehouses.length > 1 && (
           <select
             value={activeFilter}
             onChange={(e) => setActiveFilter(e.target.value)}
-            className="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="bg-white text-slate-800 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500"
           >
             <option value="all">All Hubs ({results.warehouses.length})</option>
             {results.warehouses.map((wh) => (
@@ -170,27 +168,23 @@ export default function LeafletMap({
         )}
       </div>
 
-      {/* Map Legend Overlay */}
-      <div className="absolute bottom-4 left-4 z-[400] bg-slate-900/90 backdrop-blur-md px-3 py-2.5 rounded-xl border border-slate-800 shadow-lg text-[11px] space-y-1.5 hidden sm:block">
-        <div className="font-semibold text-slate-300 flex items-center space-x-1.5">
-          <Building className="w-3.5 h-3.5 text-brand-400" />
+      {/* Map Visual Legend: Crisp Light Box */}
+      <div className="absolute bottom-3 left-3 z-[400] bg-white/95 px-3 py-2 rounded-md border border-slate-200 shadow-sm text-[11px] space-y-1 hidden sm:block">
+        <div className="font-bold text-slate-800 flex items-center space-x-1 mb-1">
+          <Building className="w-3 h-3 text-blue-600" />
           <span>Map Visual Legend</span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="w-3 h-3 rounded-full border border-white bg-slate-700 inline-block"></span>
-          <span className="text-slate-400">Warehouse Hub Pin (A, B, C...)</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>
+          <span className="text-slate-600">Fulfillment Hub Pin (A, B, C...)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span>
-          <span className="text-slate-400">Neighborhood (Size = Daily Orders)</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block"></span>
+          <span className="text-slate-600">Neighborhood (Size = Daily Volume)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-rose-500/50 inline-block"></span>
-          <span className="text-rose-400 font-medium">Radius Violation (&gt; {maxDeliveryRadiusKm}km)</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-          <span className="text-amber-400 font-medium">Overflow Reassigned</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block"></span>
+          <span className="text-rose-700 font-medium">Radius Violation (&gt; {maxDeliveryRadiusKm} km)</span>
         </div>
       </div>
 
@@ -203,12 +197,13 @@ export default function LeafletMap({
       >
         <MapRecenter bounds={bounds} />
 
+        {/* Clean CartoDB Voyager Light Map Tiles */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CartoDB'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> & CartoDB'
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
 
-        {/* 1. Render Connection Lines from Hub to Neighborhood */}
+        {/* 1. Straight Lightweight Connection Lines */}
         {results && internalShowLines && results.assignments && results.assignments.map((assignment) => {
           if (activeFilter !== 'all' && String(assignment.assigned_warehouse_id) !== activeFilter) {
             return null;
@@ -225,14 +220,14 @@ export default function LeafletMap({
                 [assignment.lat, assignment.lng]
               ]}
               pathOptions={{
-                color: assignment.is_radius_violation ? '#ef4444' : lineColor,
-                weight: assignment.is_radius_violation ? 2.5 : 1.8,
-                dashArray: assignment.is_overflow_reassigned ? '4, 6' : assignment.is_radius_violation ? '6, 6' : undefined,
-                opacity: 0.75
+                color: assignment.is_radius_violation ? '#dc2626' : lineColor,
+                weight: 1.5, // CHANGE 5: Lightweight straight line
+                dashArray: assignment.is_overflow_reassigned ? '3, 4' : assignment.is_radius_violation ? '4, 4' : undefined,
+                opacity: 0.85
               }}
             >
               <Tooltip sticky>
-                <div className="text-xs">
+                <div className="text-xs font-sans">
                   <strong>{assignment.neighborhood_name}</strong> → {assignment.assigned_warehouse_name}<br />
                   Distance: <strong>{assignment.distance_km} km</strong> | Time: <strong>{assignment.delivery_time_mins} mins</strong>
                 </div>
@@ -241,7 +236,7 @@ export default function LeafletMap({
           );
         })}
 
-        {/* 2. Render Warehouse Markers & Coverage Radius Rings */}
+        {/* 2. Warehouse Pins & Radius Range Rings */}
         {results && results.warehouses && results.warehouses.map((wh, idx) => {
           if (activeFilter !== 'all' && String(wh.id) !== activeFilter) {
             return null;
@@ -255,49 +250,46 @@ export default function LeafletMap({
               {internalShowRadius && (
                 <Circle
                   center={[wh.lat, wh.lng]}
-                  radius={maxDeliveryRadiusKm * 1000} // Leaflet uses meters
+                  radius={maxDeliveryRadiusKm * 1000}
                   pathOptions={{
                     color: ringColor,
-                    weight: 1.5,
-                    dashArray: '5, 8',
+                    weight: 1.2,
+                    dashArray: '4, 6',
                     fillColor: ringColor,
-                    fillOpacity: 0.04
+                    fillOpacity: 0.05
                   }}
                 />
               )}
 
-              {/* Warehouse Pin Marker */}
+              {/* Warehouse Pin */}
               <Marker
                 position={[wh.lat, wh.lng]}
                 icon={createWarehouseIcon(idx, wh.name, wh.is_over_capacity)}
               >
                 <Popup className="custom-leaflet-popup">
-                  <div className="p-1 space-y-1.5 text-xs text-slate-200">
-                    <div className="flex items-center justify-between border-b border-slate-700 pb-1">
-                      <span className="font-bold text-sm text-white flex items-center space-x-1">
-                        <span>🏢</span>
-                        <span>{wh.name}</span>
-                      </span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-800 border border-slate-700">
+                  <div className="p-1 space-y-1 text-xs text-slate-800 font-sans">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-1 font-bold text-slate-900">
+                      <span>{wh.name}</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-700">
                         Hub #{wh.id}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400">Assigned Orders:</span>{' '}
-                      <strong className="text-white">{wh.total_orders_assigned.toLocaleString()}</strong> / {wh.capacity_limit.toLocaleString()}
+                      <span className="text-slate-500">Orders Assigned:</span>{' '}
+                      <strong>{wh.total_orders_assigned.toLocaleString()}</strong> / {wh.capacity_limit.toLocaleString()}
                     </div>
                     <div>
-                      <span className="text-slate-400">Capacity Utilization:</span>{' '}
-                      <strong className={wh.utilization_pct > 90 ? 'text-amber-400' : 'text-emerald-400'}>
+                      <span className="text-slate-500">Utilization:</span>{' '}
+                      <strong className={wh.utilization_pct > 90 ? 'text-amber-600' : 'text-emerald-600'}>
                         {wh.utilization_pct}%
                       </strong>
                     </div>
                     <div>
-                      <span className="text-slate-400">Serving:</span>{' '}
-                      <strong className="text-white">{wh.assigned_neighborhood_count} Neighborhoods</strong>
+                      <span className="text-slate-500">Serves:</span>{' '}
+                      <strong>{wh.assigned_neighborhood_count} Neighborhoods</strong>
                     </div>
                     {wh.is_over_capacity && (
-                      <div className="p-1 bg-rose-500/20 text-rose-300 rounded border border-rose-500/30 font-semibold flex items-center space-x-1">
+                      <div className="p-1 bg-rose-50 text-rose-800 rounded border border-rose-200 text-[11px] font-semibold flex items-center space-x-1">
                         <AlertTriangle className="w-3.5 h-3.5" />
                         <span>Exceeds Target Capacity</span>
                       </div>
@@ -309,7 +301,7 @@ export default function LeafletMap({
           );
         })}
 
-        {/* 3. Render Neighborhood Demand Markers */}
+        {/* 3. Neighborhood Demand Markers */}
         {neighborhoods.map((n) => {
           const assignment = assignmentMap[n.id];
           
@@ -317,28 +309,25 @@ export default function LeafletMap({
             return null;
           }
 
-          // Marker size scaled by daily order volume
-          const radiusSize = Math.max(6, Math.min(16, Math.sqrt(n.daily_orders) / 4.5));
-
+          const radiusSize = Math.max(5, Math.min(14, Math.sqrt(n.daily_orders) / 4.8));
           const whIndex = assignment ? assignment.assigned_warehouse_id - 1 : 0;
-          const clusterColor = assignment ? WAREHOUSE_COLORS[whIndex % WAREHOUSE_COLORS.length] : '#38bdf8';
+          const clusterColor = assignment ? WAREHOUSE_COLORS[whIndex % WAREHOUSE_COLORS.length] : '#2563eb';
 
           const isViolation = assignment?.is_radius_violation;
           const isOverflow = assignment?.is_overflow_reassigned;
 
           return (
             <React.Fragment key={`nh-group-${n.id}`}>
-              {/* Outer pulsing ring if radius is violated */}
+              {/* Subtle steady ring if radius violated */}
               {isViolation && (
                 <CircleMarker
                   center={[n.lat, n.lng]}
-                  radius={radiusSize + 7}
+                  radius={radiusSize + 5}
                   pathOptions={{
-                    color: '#ef4444',
-                    weight: 2,
-                    dashArray: '3, 3',
-                    fillColor: '#ef4444',
-                    fillOpacity: 0.2
+                    color: '#dc2626',
+                    weight: 1.5,
+                    dashArray: '2, 3',
+                    fillColor: 'transparent'
                   }}
                 />
               )}
@@ -347,51 +336,50 @@ export default function LeafletMap({
                 center={[n.lat, n.lng]}
                 radius={radiusSize}
                 pathOptions={{
-                  color: isViolation ? '#ef4444' : isOverflow ? '#f59e0b' : clusterColor,
-                  weight: 2.5,
-                  fillColor: isViolation ? '#ef4444' : isOverflow ? '#f59e0b' : clusterColor,
-                  fillOpacity: 0.75
+                  color: isViolation ? '#dc2626' : isOverflow ? '#d97706' : clusterColor,
+                  weight: 2,
+                  fillColor: isViolation ? '#dc2626' : isOverflow ? '#d97706' : clusterColor,
+                  fillOpacity: 0.8
                 }}
               >
                 <Popup className="custom-leaflet-popup">
-                  <div className="p-1 space-y-1.5 text-xs text-slate-200">
-                    <div className="font-bold text-sm text-white border-b border-slate-700 pb-1">
-                      📍 {n.name}
+                  <div className="p-1 space-y-1 text-xs text-slate-800 font-sans">
+                    <div className="font-bold text-slate-900 border-b border-slate-200 pb-1">
+                      {n.name}
                     </div>
                     <div>
-                      <span className="text-slate-400">Daily Demand:</span>{' '}
-                      <strong className="text-cyan-300">{n.daily_orders.toLocaleString()} orders/day</strong>
+                      <span className="text-slate-500">Daily Demand:</span>{' '}
+                      <strong className="text-blue-600">{n.daily_orders.toLocaleString()} orders</strong>
                     </div>
 
                     {assignment && (
                       <>
-                        <div className="pt-1 border-t border-slate-800">
-                          <span className="text-slate-400">Assigned Hub:</span>{' '}
-                          <strong className="text-white">{assignment.assigned_warehouse_name}</strong>
+                        <div className="pt-1 border-t border-slate-100">
+                          <span className="text-slate-500">Assigned Hub:</span>{' '}
+                          <strong>{assignment.assigned_warehouse_name}</strong>
                         </div>
                         <div>
-                          <span className="text-slate-400">Haversine Distance:</span>{' '}
-                          <strong className="text-white font-mono">{assignment.distance_km} km</strong>
+                          <span className="text-slate-500">Haversine Distance:</span>{' '}
+                          <strong className="font-mono">{assignment.distance_km} km</strong>
                         </div>
                         <div>
-                          <span className="text-slate-400">Estimated Delivery Time:</span>{' '}
-                          <strong className="text-white font-mono">{assignment.delivery_time_mins} mins</strong>
+                          <span className="text-slate-500">Transit Duration:</span>{' '}
+                          <strong className="font-mono">{assignment.delivery_time_mins} mins</strong>
                         </div>
                         <div>
-                          <span className="text-slate-400">Daily Delivery Cost:</span>{' '}
-                          <strong className="text-white font-mono">₹{assignment.delivery_cost_daily.toLocaleString()}</strong>
+                          <span className="text-slate-500">Daily Delivery Cost:</span>{' '}
+                          <strong className="font-mono text-emerald-700">₹{assignment.delivery_cost_daily.toLocaleString()}</strong>
                         </div>
 
                         {isViolation && (
-                          <div className="p-1.5 bg-rose-500/20 text-rose-300 rounded border border-rose-500/30 font-semibold flex items-center space-x-1 text-[11px]">
-                            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                            <span>Radius Constraint Violated (+{assignment.radius_overshoot_km} km)</span>
+                          <div className="p-1 bg-rose-50 text-rose-800 rounded border border-rose-200 text-[11px] font-semibold">
+                            Radius Violation (+{assignment.radius_overshoot_km} km)
                           </div>
                         )}
 
                         {isOverflow && (
-                          <div className="p-1.5 bg-amber-500/20 text-amber-300 rounded border border-amber-500/30 font-semibold flex items-center space-x-1 text-[11px]">
-                            <span>⚠️ Overflow Reassigned (Closest Hub Full)</span>
+                          <div className="p-1 bg-amber-50 text-amber-800 rounded border border-amber-200 text-[11px] font-semibold">
+                            Overflow Reassigned
                           </div>
                         )}
                       </>

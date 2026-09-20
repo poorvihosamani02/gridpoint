@@ -10,7 +10,7 @@ import {
   IndianRupee, 
   Download, 
   Sliders, 
-  Map, 
+  MapPin, 
   Layers, 
   Fuel, 
   Truck, 
@@ -22,10 +22,11 @@ import {
 import { useApp } from '../context/AppContext';
 import MetricCard from '../components/MetricCard';
 import TradeoffChart from '../components/TradeoffChart';
+import LeafletMap from '../components/LeafletMap';
 import { WAREHOUSE_COLORS } from '../utils/sampleData';
 
 export default function Results() {
-  const { results, settings, executeOptimization, isOptimizing } = useApp();
+  const { results, neighborhoods, settings } = useApp();
   const navigate = useNavigate();
 
   const [filterHub, setFilterHub] = useState('all');
@@ -34,22 +35,21 @@ export default function Results() {
   if (!results) {
     return (
       <div className="py-20 text-center space-y-5 max-w-md mx-auto">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400">
+        <div className="w-16 h-16 mx-auto rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
           <BarChart3 className="w-8 h-8" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-white">No Results Generated Yet</h2>
-          <p className="text-sm text-slate-400 mt-1">
-            Run the optimization engine to view network analytics, Before vs. After comparisons, and trade-off curves.
+          <h2 className="text-2xl font-bold text-slate-900">No Optimization Results Yet</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Run the optimization engine from the Dashboard or Optimization Settings to view network analytics.
           </p>
         </div>
         <div className="flex justify-center gap-3 pt-2">
           <button
-            onClick={() => navigate('/optimize')}
-            className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-cyan-500 hover:from-brand-500 hover:to-cyan-400 text-white font-semibold text-xs shadow-lg transition-all"
+            onClick={() => navigate('/')}
+            className="flex items-center space-x-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition-all"
           >
-            <Sliders className="w-4 h-4" />
-            <span>Go to Optimization Settings</span>
+            <span>Return to Dashboard</span>
           </button>
         </div>
       </div>
@@ -70,49 +70,40 @@ export default function Results() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(results, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `gridpoint_optimization_results_${Date.now()}.json`);
+    downloadAnchor.setAttribute("download", `gridpoint_results_${Date.now()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
   };
 
   return (
-    <div className="space-y-10 pb-20">
+    <div className="space-y-8 pb-16">
       
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center space-x-2 text-xs font-semibold text-emerald-400 mb-1">
-            <CheckCircle2 className="w-4 h-4" />
+          <div className="flex items-center space-x-2 text-xs font-semibold text-emerald-700 mb-1">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>OPTIMIZATION COMPUTED IN {results.execution_time_ms} MS</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Analytics & Results</h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Comprehensive Before vs. After performance, fleet fuel audit, and capacity allocation.
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Analytics & Results</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Before vs. After benchmark, geospatial fulfillment layout, and cost trade-off curve.
           </p>
         </div>
 
-        {/* Action Shortcuts */}
         <div className="flex flex-wrap items-center gap-2.5">
           <button
-            onClick={() => navigate('/map')}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all"
-          >
-            <Map className="w-3.5 h-3.5 text-brand-400" />
-            <span>View Map Routes</span>
-          </button>
-
-          <button
             onClick={() => navigate('/optimize')}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-colors"
           >
-            <Sliders className="w-3.5 h-3.5 text-amber-400" />
-            <span>Modify Settings</span>
+            <Sliders className="w-3.5 h-3.5 text-blue-600" />
+            <span>Tune Parameters</span>
           </button>
 
           <button
             onClick={handleExportJSON}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export Report (JSON)</span>
@@ -120,42 +111,42 @@ export default function Results() {
         </div>
       </div>
 
-      {/* Executive Savings Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-500/30 p-6 sm:p-8 shadow-xl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Executive Savings Banner: Light Theme */}
+      <div className="rounded-lg bg-slate-50 border border-slate-200 p-6 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Delivery Cost Reduction</span>
-            <div className="text-4xl font-extrabold text-white font-mono flex items-baseline space-x-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Delivery Cost Reduction</span>
+            <div className="text-3xl font-extrabold text-slate-900 font-mono flex items-baseline space-x-2">
               <span>{before_after.delivery_cost_saved_pct}%</span>
-              <span className="text-xs text-emerald-400 font-sans font-semibold">Saved</span>
+              <span className="text-xs text-emerald-600 font-sans font-semibold">Saved</span>
             </div>
-            <p className="text-xs text-slate-400">₹{before_after.delivery_cost_saved.toLocaleString()} saved daily</p>
+            <p className="text-xs text-slate-500">₹{before_after.delivery_cost_saved.toLocaleString()} daily savings</p>
           </div>
 
           <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-400">Weighted Distance Trimmed</span>
-            <div className="text-4xl font-extrabold text-white font-mono flex items-baseline space-x-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Weighted Distance Slashed</span>
+            <div className="text-3xl font-extrabold text-slate-900 font-mono flex items-baseline space-x-2">
               <span>{before_after.distance_saved_pct}%</span>
-              <span className="text-xs text-brand-400 font-sans font-semibold">Fewer km</span>
+              <span className="text-xs text-blue-600 font-sans font-semibold">Fewer km</span>
             </div>
-            <p className="text-xs text-slate-400">{before_after.distance_saved_km.toLocaleString()} order-km slashed daily</p>
+            <p className="text-xs text-slate-500">{before_after.distance_saved_km.toLocaleString()} order-km daily</p>
           </div>
 
           <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Transit Hours Reclaimed</span>
-            <div className="text-4xl font-extrabold text-white font-mono flex items-baseline space-x-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Transit Hours Reclaimed</span>
+            <div className="text-3xl font-extrabold text-slate-900 font-mono flex items-baseline space-x-2">
               <span>{before_after.time_saved_pct}%</span>
-              <span className="text-xs text-cyan-400 font-sans font-semibold">Faster</span>
+              <span className="text-xs text-indigo-600 font-sans font-semibold">Faster</span>
             </div>
-            <p className="text-xs text-slate-400">{before_after.time_saved_hours.toLocaleString()} road hours saved</p>
+            <p className="text-xs text-slate-500">{before_after.time_saved_hours.toLocaleString()} hours trimmed</p>
           </div>
 
           <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-400">Fleet Fuel Economy</span>
-            <div className="text-4xl font-extrabold text-white font-mono flex items-baseline space-x-2">
-              <span>₹{summary.total_fuel_cost.toLocaleString()}</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Fleet Fuel Cost</span>
+            <div className="text-3xl font-extrabold text-slate-900 font-mono">
+              ₹{summary.total_fuel_cost.toLocaleString()}
             </div>
-            <p className="text-xs text-slate-400">{settings.fleet_type.toUpperCase()} fleet ({settings.traffic_condition} traffic)</p>
+            <p className="text-xs text-slate-500">{settings.fleet_type.toUpperCase()} fleet ({settings.traffic_condition} traffic)</p>
           </div>
         </div>
       </div>
@@ -173,7 +164,7 @@ export default function Results() {
         <MetricCard
           title="Average Delivery Distance"
           value={`${summary.avg_delivery_distance_km} km`}
-          subtitle={`Max: ${summary.max_delivery_distance_km} km | Avg Time: ${summary.avg_delivery_time_mins} min`}
+          subtitle={`Max: ${summary.max_delivery_distance_km} km | Time: ${summary.avg_delivery_time_mins} min`}
           icon={Truck}
           highlightColor="brand"
         />
@@ -187,90 +178,116 @@ export default function Results() {
         />
 
         <MetricCard
-          title="Constraint Status"
-          value={`${summary.radius_violations_count} Radius Alert`}
+          title="SLA Radius Status"
+          value={`${summary.radius_violations_count} Alerts`}
           subtitle={`${summary.overflow_reassignments_count} overflow reassignments`}
           icon={ShieldAlert}
           highlightColor={summary.radius_violations_count > 0 ? 'rose' : 'emerald'}
         />
       </div>
 
-      {/* BEFORE VS AFTER DETAILED COMPARISON TABLE */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800 pb-4">
+      {/* CHANGE 3: MERGED INTERACTIVE MAP DIRECTLY INSIDE ANALYTICS & RESULTS */}
+      <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
-            <h3 className="text-lg font-bold text-white">Before vs. After Optimization Benchmark</h3>
-            <p className="text-xs text-slate-400">
-              Single geometric-center warehouse (Before) versus algorithmically distributed multi-hub layout (After).
+            <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <span>Geospatial Network & Assignment Routes</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Visualizing fulfillment hubs, customer demand clusters, straight route assignments, and SLA perimeters.
             </p>
           </div>
-          <span className="text-xs px-3 py-1 rounded-full bg-slate-800 text-slate-300 font-mono">
+          <span className="text-xs px-2.5 py-1 rounded bg-slate-100 text-slate-700 font-semibold">
+            {warehouses.length} Active Hubs • {assignments.length} Demand Nodes
+          </span>
+        </div>
+
+        {/* Embedded Leaflet Map */}
+        <LeafletMap
+          neighborhoods={neighborhoods}
+          results={results}
+          maxDeliveryRadiusKm={settings.max_delivery_radius_km}
+          height="520px"
+        />
+      </div>
+
+      {/* BEFORE VS AFTER BENCHMARK TABLE */}
+      <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Before vs. After Optimization Benchmark</h3>
+            <p className="text-xs text-slate-500">
+              Single geometric-center baseline (Before) versus algorithmically distributed multi-hub layout (After).
+            </p>
+          </div>
+          <span className="text-xs px-2.5 py-1 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono font-semibold">
             {before_after.before_num_warehouses} Hub Baseline → {before_after.after_num_warehouses} Hubs Optimized
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-mono">
-            <thead className="text-slate-400 border-b border-slate-800 uppercase text-[11px] font-sans">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase text-[10px] font-semibold">
               <tr>
-                <th className="py-3 px-4">Performance Metric</th>
-                <th className="py-3 px-4">Single Central Hub (Before)</th>
-                <th className="py-3 px-4 text-emerald-400">Multi-Hub Optimized (After)</th>
-                <th className="py-3 px-4 text-right">Net Improvement</th>
+                <th className="py-2.5 px-4">Performance Metric</th>
+                <th className="py-2.5 px-4">Single Central Hub (Before)</th>
+                <th className="py-2.5 px-4 text-blue-700">Multi-Hub Optimized (After)</th>
+                <th className="py-2.5 px-4 text-right">Net Improvement</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              <tr className="hover:bg-slate-800/20">
-                <td className="py-3 px-4 font-sans font-medium text-slate-200">Active Warehouses</td>
-                <td className="py-3 px-4 text-slate-400">{before_after.before_num_warehouses} Facility (Geo Center)</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold">{before_after.after_num_warehouses} Distributed Facilities</td>
-                <td className="py-3 px-4 text-right text-brand-400">+{before_after.after_num_warehouses - 1} Regional Hubs</td>
+            <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+              <tr className="hover:bg-slate-50 font-sans">
+                <td className="py-2.5 px-4 font-medium text-slate-900">Active Facilities</td>
+                <td className="py-2.5 px-4 text-slate-600">{before_after.before_num_warehouses} Hub (Geometric Center)</td>
+                <td className="py-2.5 px-4 text-blue-700 font-semibold">{before_after.after_num_warehouses} Distributed Hubs</td>
+                <td className="py-2.5 px-4 text-right text-blue-600">+{before_after.after_num_warehouses - 1} Regional Facilities</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/20">
-                <td className="py-3 px-4 font-sans font-medium text-slate-200">Total Weighted Distance</td>
-                <td className="py-3 px-4 text-slate-400">{before_after.before_total_weighted_distance_km.toLocaleString()} order-km</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold">{before_after.after_total_weighted_distance_km.toLocaleString()} order-km</td>
-                <td className="py-3 px-4 text-right text-emerald-400 font-bold">
+              <tr className="hover:bg-slate-50">
+                <td className="py-2.5 px-4 font-sans font-medium text-slate-900">Weighted Distance</td>
+                <td className="py-2.5 px-4 text-slate-600">{before_after.before_total_weighted_distance_km.toLocaleString()} order-km</td>
+                <td className="py-2.5 px-4 text-blue-700 font-semibold">{before_after.after_total_weighted_distance_km.toLocaleString()} order-km</td>
+                <td className="py-2.5 px-4 text-right text-emerald-600 font-bold">
                   ↓ {before_after.distance_saved_pct}% ({before_after.distance_saved_km.toLocaleString()} km)
                 </td>
               </tr>
 
-              <tr className="hover:bg-slate-800/20">
-                <td className="py-3 px-4 font-sans font-medium text-slate-200">Total Daily Delivery Cost</td>
-                <td className="py-3 px-4 text-slate-400">₹{before_after.before_total_delivery_cost.toLocaleString()}</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold">₹{before_after.after_total_delivery_cost.toLocaleString()}</td>
-                <td className="py-3 px-4 text-right text-emerald-400 font-bold">
+              <tr className="hover:bg-slate-50">
+                <td className="py-2.5 px-4 font-sans font-medium text-slate-900">Daily Delivery Cost</td>
+                <td className="py-2.5 px-4 text-slate-600">₹{before_after.before_total_delivery_cost.toLocaleString()}</td>
+                <td className="py-2.5 px-4 text-blue-700 font-semibold">₹{before_after.after_total_delivery_cost.toLocaleString()}</td>
+                <td className="py-2.5 px-4 text-right text-emerald-600 font-bold">
                   ↓ {before_after.delivery_cost_saved_pct}% (₹{before_after.delivery_cost_saved.toLocaleString()})
                 </td>
               </tr>
 
-              <tr className="hover:bg-slate-800/20">
-                <td className="py-3 px-4 font-sans font-medium text-slate-200">Fleet Fuel Expenditure</td>
-                <td className="py-3 px-4 text-slate-400">₹{before_after.before_total_fuel_cost.toLocaleString()}</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold">₹{before_after.after_total_fuel_cost.toLocaleString()}</td>
-                <td className="py-3 px-4 text-right text-emerald-400 font-bold">
+              <tr className="hover:bg-slate-50">
+                <td className="py-2.5 px-4 font-sans font-medium text-slate-900">Fleet Fuel Burn</td>
+                <td className="py-2.5 px-4 text-slate-600">₹{before_after.before_total_fuel_cost.toLocaleString()}</td>
+                <td className="py-2.5 px-4 text-blue-700 font-semibold">₹{before_after.after_total_fuel_cost.toLocaleString()}</td>
+                <td className="py-2.5 px-4 text-right text-emerald-600 font-bold">
                   ↓ ₹{(before_after.before_total_fuel_cost - before_after.after_total_fuel_cost).toFixed(0)}/day
                 </td>
               </tr>
 
-              <tr className="hover:bg-slate-800/20">
-                <td className="py-3 px-4 font-sans font-medium text-slate-200">Total Transit Hours</td>
-                <td className="py-3 px-4 text-slate-400">{before_after.before_total_travel_time_hours.toLocaleString()} hrs</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold">{before_after.after_total_travel_time_hours.toLocaleString()} hrs</td>
-                <td className="py-3 px-4 text-right text-emerald-400 font-bold">
+              <tr className="hover:bg-slate-50">
+                <td className="py-2.5 px-4 font-sans font-medium text-slate-900">Transit Duration</td>
+                <td className="py-2.5 px-4 text-slate-600">{before_after.before_total_travel_time_hours.toLocaleString()} hrs</td>
+                <td className="py-2.5 px-4 text-blue-700 font-semibold">{before_after.after_total_travel_time_hours.toLocaleString()} hrs</td>
+                <td className="py-2.5 px-4 text-right text-emerald-600 font-bold">
                   ↓ {before_after.time_saved_pct}% ({before_after.time_saved_hours} hrs)
                 </td>
               </tr>
 
-              <tr className="hover:bg-slate-800/20">
-                <td className="py-3 px-4 font-sans font-medium text-slate-200">Radius Violations (&gt; {settings.max_delivery_radius_km} km)</td>
-                <td className="py-3 px-4 text-rose-400">{before_after.before_radius_violations_count} breaches</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold">{before_after.after_radius_violations_count} breaches</td>
-                <td className="py-3 px-4 text-right text-emerald-400 font-bold">
+              <tr className="hover:bg-slate-50">
+                <td className="py-2.5 px-4 font-sans font-medium text-slate-900">Radius Violations (&gt; {settings.max_delivery_radius_km} km)</td>
+                <td className="py-2.5 px-4 text-rose-600">{before_after.before_radius_violations_count} breaches</td>
+                <td className="py-2.5 px-4 text-slate-900 font-semibold">{before_after.after_radius_violations_count} breaches</td>
+                <td className="py-2.5 px-4 text-right text-emerald-600 font-bold">
                   {before_after.before_radius_violations_count - before_after.after_radius_violations_count > 0
-                    ? `↓ ${before_after.before_radius_violations_count - before_after.after_radius_violations_count} breaches eliminated`
-                    : 'Within target range'}
+                    ? `↓ ${before_after.before_radius_violations_count - before_after.after_radius_violations_count} breaches cut`
+                    : 'Compliant'}
                 </td>
               </tr>
             </tbody>
@@ -278,71 +295,70 @@ export default function Results() {
         </div>
       </div>
 
-      {/* INFRASTRUCTURE VS DELIVERY COST TRADE-OFF CHART (BONUS #6) */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+      {/* INFRASTRUCTURE VS DELIVERY COST TRADE-OFF CURVE */}
+      <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
         <TradeoffChart data={tradeoff_curve} />
       </div>
 
       {/* WAREHOUSE LOAD & UTILIZATION BREAKDOWN */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div>
-          <h3 className="text-lg font-bold text-white">Active Fulfillment Hubs Breakdown</h3>
-          <p className="text-xs text-slate-400">
-            Geographic coordinates, daily volume allocation, and throughput utilization per facility.
+          <h3 className="text-base font-bold text-slate-900">Active Fulfillment Hubs Breakdown</h3>
+          <p className="text-xs text-slate-500">
+            Geographic coordinates, volume intake, and capacity utilization per facility.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {warehouses.map((wh, idx) => {
             const color = WAREHOUSE_COLORS[idx % WAREHOUSE_COLORS.length];
             return (
               <div
                 key={wh.id}
-                className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 space-y-4 hover:border-slate-700 transition-all"
+                className="bg-white border border-slate-200 rounded-lg p-4 space-y-3 shadow-sm"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2.5">
+                  <div className="flex items-center space-x-2">
                     <span
-                      className="w-4 h-4 rounded-full border border-white inline-block shadow-sm"
+                      className="w-3.5 h-3.5 rounded-full inline-block"
                       style={{ backgroundColor: color }}
                     ></span>
-                    <h4 className="font-bold text-white text-sm">{wh.name}</h4>
+                    <h4 className="font-bold text-slate-900 text-sm">{wh.name}</h4>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
                     Hub #{wh.id}
                   </span>
                 </div>
 
-                <div className="text-xs text-slate-400 font-mono">
-                  Coordinates: <span className="text-slate-200">{wh.lat.toFixed(4)}, {wh.lng.toFixed(4)}</span>
+                <div className="text-xs text-slate-500 font-mono">
+                  Coordinates: <span className="text-slate-800">{wh.lat.toFixed(4)}, {wh.lng.toFixed(4)}</span>
                 </div>
 
-                {/* Progress bar for capacity */}
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Capacity Utilization</span>
-                    <strong className={wh.utilization_pct > 90 ? 'text-amber-400' : 'text-emerald-400'}>
+                    <span className="text-slate-500">Capacity Load</span>
+                    <strong className={wh.utilization_pct > 90 ? 'text-amber-600' : 'text-emerald-700'}>
                       {wh.utilization_pct}%
                     </strong>
                   </div>
-                  <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-500"
+                      className="h-full rounded-full transition-all duration-300"
                       style={{
                         width: `${Math.min(100, wh.utilization_pct)}%`,
-                        backgroundColor: wh.utilization_pct > 100 ? '#ef4444' : color
+                        backgroundColor: wh.utilization_pct > 100 ? '#dc2626' : color
                       }}
                     ></div>
                   </div>
-                  <div className="flex justify-between text-[11px] text-slate-500">
+                  <div className="flex justify-between text-[10px] text-slate-400 font-mono">
                     <span>{wh.total_orders_assigned.toLocaleString()} orders</span>
-                    <span>Limit: {wh.capacity_limit.toLocaleString()}</span>
+                    <span>Cap: {wh.capacity_limit.toLocaleString()}</span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                  <span>Assigned Neighborhoods:</span>
-                  <strong className="text-white font-mono">{wh.assigned_neighborhood_count} locations</strong>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <span>Assigned Corridors:</span>
+                  <strong className="text-slate-900 font-mono">{wh.assigned_neighborhood_count} nodes</strong>
                 </div>
               </div>
             );
@@ -350,29 +366,29 @@ export default function Results() {
         </div>
       </div>
 
-      {/* DETAILED NEIGHBORHOOD ASSIGNMENT REGISTRY */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* NEIGHBORHOOD ASSIGNMENT AUDIT TABLE */}
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h3 className="text-base font-bold text-white">Neighborhood Demand & Route Audit</h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Individual assignments, transit distance, trip fuel burn, and SLA status flags.
+            <h3 className="text-base font-bold text-slate-900">Neighborhood Route Audit</h3>
+            <p className="text-xs text-slate-500">
+              Individual node assignments, Haversine distance, and SLA status flags.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <input
               type="text"
-              placeholder="Search neighborhood..."
+              placeholder="Filter by name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="border border-slate-300 rounded px-2.5 py-1 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
             />
 
             <select
               value={filterHub}
               onChange={(e) => setFilterHub(e.target.value)}
-              className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 focus:outline-none focus:border-blue-600"
             >
               <option value="all">All Hubs</option>
               {warehouses.map((w) => (
@@ -382,42 +398,41 @@ export default function Results() {
           </div>
         </div>
 
-        <div className="overflow-x-auto max-h-[500px]">
+        <div className="overflow-x-auto max-h-96">
           <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider font-semibold">
+            <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] font-semibold sticky top-0 border-b border-slate-200">
               <tr>
-                <th className="py-3 px-4">Neighborhood</th>
-                <th className="py-3 px-4">Daily Demand</th>
-                <th className="py-3 px-4">Assigned Warehouse Hub</th>
-                <th className="py-3 px-4">Haversine Distance</th>
-                <th className="py-3 px-4">Transit Time</th>
-                <th className="py-3 px-4">Fuel Cost</th>
-                <th className="py-3 px-4">Delivery Cost</th>
-                <th className="py-3 px-4 text-right">Status Flag</th>
+                <th className="py-2.5 px-4">Location</th>
+                <th className="py-2.5 px-3">Orders</th>
+                <th className="py-2.5 px-3">Assigned Facility</th>
+                <th className="py-2.5 px-3">Distance</th>
+                <th className="py-2.5 px-3">Time</th>
+                <th className="py-2.5 px-3">Fuel Cost</th>
+                <th className="py-2.5 px-3">Delivery Cost</th>
+                <th className="py-2.5 px-4 text-right">Status Flag</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
+            <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
               {filteredAssignments.map((a) => (
-                <tr key={a.neighborhood_id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-3 px-4 font-sans font-medium text-white">{a.neighborhood_name}</td>
-                  <td className="py-3 px-4 text-cyan-300">{a.daily_orders_effective.toLocaleString()} orders</td>
-                  <td className="py-3 px-4 text-slate-200 font-sans">{a.assigned_warehouse_name}</td>
-                  <td className="py-3 px-4 text-slate-300">{a.distance_km} km</td>
-                  <td className="py-3 px-4 text-slate-300">{a.delivery_time_mins} mins</td>
-                  <td className="py-3 px-4 text-purple-300">₹{a.fuel_cost_daily.toLocaleString()}</td>
-                  <td className="py-3 px-4 text-emerald-300 font-semibold">₹{a.delivery_cost_daily.toLocaleString()}</td>
-                  <td className="py-3 px-4 text-right font-sans">
+                <tr key={a.neighborhood_id} className="hover:bg-slate-50 font-sans">
+                  <td className="py-2 px-4 font-medium text-slate-900">{a.neighborhood_name}</td>
+                  <td className="py-2 px-3 text-blue-600 font-mono">{a.daily_orders_effective.toLocaleString()}</td>
+                  <td className="py-2 px-3 text-slate-700">{a.assigned_warehouse_name}</td>
+                  <td className="py-2 px-3 text-slate-600 font-mono">{a.distance_km} km</td>
+                  <td className="py-2 px-3 text-slate-600 font-mono">{a.delivery_time_mins} min</td>
+                  <td className="py-2 px-3 text-slate-600 font-mono">₹{a.fuel_cost_daily.toLocaleString()}</td>
+                  <td className="py-2 px-3 text-emerald-700 font-mono font-semibold">₹{a.delivery_cost_daily.toLocaleString()}</td>
+                  <td className="py-2 px-4 text-right font-sans">
                     {a.is_radius_violation ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        Radius Violation (+{a.radius_overshoot_km} km)
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                        Radius Alert (+{a.radius_overshoot_km} km)
                       </span>
                     ) : a.is_overflow_reassigned ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                         Overflow Reassigned
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         Optimal
                       </span>
                     )}

@@ -55,7 +55,7 @@ export const TRAFFIC_INFO = {
 };
 
 export const WAREHOUSE_COLORS = [
-  '#2563eb', // Solid Blue (Primary Hub)
+  '#2563eb', // Solid Royal Blue (Primary Hub)
   '#ea580c', // Solid Industrial Orange (Secondary Hub)
   '#16a34a', // Solid Emerald Green (Third Hub)
   '#7c3aed', // Solid Violet / Indigo (Fourth Hub)

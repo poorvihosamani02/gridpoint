@@ -11,41 +11,41 @@ export default function MetricCard({
   badge
 }) {
   const colorMap = {
-    brand: 'text-brand-400 bg-brand-500/10 border-brand-500/20',
-    emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    rose: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
-    purple: 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+    brand: 'text-blue-600 bg-blue-50 border-blue-200',
+    emerald: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    amber: 'text-amber-700 bg-amber-50 border-amber-200',
+    rose: 'text-rose-700 bg-rose-50 border-rose-200',
+    purple: 'text-indigo-700 bg-indigo-50 border-indigo-200'
   };
 
   return (
-    <div className="bg-slate-900/70 backdrop-blur-sm border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all duration-200 group">
+    <div className="bg-white border border-slate-200 rounded-lg p-5 hover:border-slate-300 shadow-sm transition-colors group">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</p>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-2xl font-bold tracking-tight text-white font-mono">{value}</span>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{title}</p>
+          <div className="mt-1.5 flex items-baseline space-x-2">
+            <span className="text-2xl font-extrabold tracking-tight text-slate-900 font-mono">{value}</span>
             {badge && (
-              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
                 {badge}
               </span>
             )}
           </div>
         </div>
         {Icon && (
-          <div className={`p-2.5 rounded-xl border ${colorMap[highlightColor] || colorMap.brand} group-hover:scale-110 transition-transform`}>
+          <div className={`p-2 rounded-lg border ${colorMap[highlightColor] || colorMap.brand}`}>
             <Icon className="w-5 h-5" />
           </div>
         )}
       </div>
 
       {(subtitle || trend) && (
-        <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-          {subtitle && <span className="text-slate-400 truncate">{subtitle}</span>}
+        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
+          {subtitle && <span className="text-slate-500 truncate">{subtitle}</span>}
           {trend && (
             <span
-              className={`font-semibold flex items-center space-x-1 ${
-                trendPositive ? 'text-emerald-400' : 'text-rose-400'
+              className={`font-semibold flex items-center space-x-0.5 ${
+                trendPositive ? 'text-emerald-600' : 'text-rose-600'
               }`}
             >
               <span>{trendPositive ? '↓' : '↑'}</span>
