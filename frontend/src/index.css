@@ -4,69 +4,71 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 font-sans;
+    @apply bg-slate-950 text-slate-100 font-sans antialiased;
+    background-color: #0b1120;
+    color: #f8fafc;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Custom styles for Leaflet elements */
+/* Card design utility: rounded corners, subtle navy border, soft shadow */
+@layer components {
+  .gp-card {
+    @apply bg-slate-900 border border-slate-800 rounded-xl shadow-card transition-colors duration-150;
+  }
+  .gp-card:hover {
+    @apply border-slate-700/80;
+  }
+}
+
+/* Leaflet map container */
 .leaflet-container {
   width: 100%;
   height: 100%;
   border-radius: 0.75rem;
   font-family: inherit;
-  background-color: #0b0f19 !important;
+  background-color: #0b1120 !important;
 }
 
-/* Dark mode leaflet map tiles filter */
+/* Crisp dark-navy map tiles filter for a modern, serious geospatial look */
 .leaflet-tile {
-  filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+  filter: brightness(0.65) invert(1) contrast(2.6) hue-rotate(205deg) saturate(0.25) brightness(0.72);
 }
 
-/* Custom Leaflet popup styling */
+/* Clean, modern popup cards */
 .custom-leaflet-popup .leaflet-popup-content-wrapper {
   background: #0f172a;
-  color: #f1f5f9;
-  border: 1px solid #334155;
+  color: #f8fafc;
+  border: 1px solid #1e293b;
   border-radius: 0.75rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 25px -5px rgba(2, 6, 23, 0.7), 0 8px 10px -6px rgba(2, 6, 23, 0.5);
+  padding: 0.25rem;
 }
 
 .custom-leaflet-popup .leaflet-popup-tip {
   background: #0f172a;
+  border: 1px solid #1e293b;
 }
 
-/* Pulsing effect for constraint violations */
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.9;
-  }
-  50% {
-    transform: scale(1.4);
-    opacity: 0.2;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0.9;
-  }
+/* Subtle, minimal constraint violation indicator (steady, high-contrast, no distracting movement) */
+.violation-ring {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
 }
 
-.pulse-violation {
-  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Custom scrollbars */
+/* Minimal, professional scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #0b1120;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: #1e293b;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #334155;
 }

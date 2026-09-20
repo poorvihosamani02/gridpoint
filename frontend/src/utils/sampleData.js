@@ -55,9 +55,9 @@ export const TRAFFIC_INFO = {
 };
 
 export const WAREHOUSE_COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ec4899', // pink
-  '#8b5cf6', // purple
+  '#2563eb', // Solid Blue (Primary Hub)
+  '#ea580c', // Solid Industrial Orange (Secondary Hub)
+  '#16a34a', // Solid Emerald Green (Third Hub)
+  '#7c3aed', // Solid Violet / Indigo (Fourth Hub)
+  '#0891b2', // Solid Industrial Cyan (Fifth Hub)
 ];
