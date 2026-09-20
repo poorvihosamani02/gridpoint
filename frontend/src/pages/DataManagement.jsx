@@ -1,16 +1,18 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Upload, 
   Download, 
   Plus, 
   Trash2, 
   Sparkles, 
-  Check, 
+  CheckCircle2, 
   AlertCircle, 
-  RefreshCw,
   FileText,
-  MapPin,
-  Package
+  Zap,
+  ArrowRight,
+  Package,
+  RotateCcw
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -22,12 +24,17 @@ export default function DataManagement() {
     clearData, 
     addNeighborhood, 
     removeNeighborhood, 
-    updateNeighborhood 
+    updateNeighborhood,
+    executeOptimization,
+    isOptimizing
   } = useApp();
 
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [feedback, setFeedback] = useState(null);
-  const [newRow, setNewRow] = useState({
+
+  // Form state for Manual Data Entry
+  const [manualRow, setManualRow] = useState({
     name: '',
     lat: '',
     lng: '',
@@ -112,7 +119,7 @@ export default function DataManagement() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "gridpoint_neighborhoods_template.csv");
+    link.setAttribute("download", "gridpoint_template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -134,17 +141,17 @@ export default function DataManagement() {
     document.body.removeChild(link);
   };
 
-  // Add new row manually
-  const handleAddRow = (e) => {
+  // Add individual row manually
+  const handleAddManualNode = (e) => {
     e.preventDefault();
-    if (!newRow.name || !newRow.lat || !newRow.lng || !newRow.daily_orders) {
-      setFeedback({ type: 'error', message: 'All fields are required to add a new neighborhood.' });
+    if (!manualRow.name || !manualRow.lat || !manualRow.lng || !manualRow.daily_orders) {
+      setFeedback({ type: 'error', message: 'All 4 fields are required to add a new neighborhood.' });
       return;
     }
 
-    const lat = parseFloat(newRow.lat);
-    const lng = parseFloat(newRow.lng);
-    const orders = parseInt(newRow.daily_orders, 10);
+    const lat = parseFloat(manualRow.lat);
+    const lng = parseFloat(manualRow.lng);
+    const orders = parseInt(manualRow.daily_orders, 10);
 
     if (isNaN(lat) || isNaN(lng) || isNaN(orders)) {
       setFeedback({ type: 'error', message: 'Latitude, Longitude, and Daily Orders must be valid numbers.' });
@@ -153,62 +160,81 @@ export default function DataManagement() {
 
     addNeighborhood({
       id: `MANUAL-${Date.now()}`,
-      name: newRow.name.trim(),
+      name: manualRow.name.trim(),
       lat: Math.round(lat * 10000) / 10000,
       lng: Math.round(lng * 10000) / 10000,
       daily_orders: Math.max(1, orders)
     });
 
-    setNewRow({ name: '', lat: '', lng: '', daily_orders: '' });
-    setFeedback({ type: 'success', message: `Added "${newRow.name}" to dataset.` });
+    setManualRow({ name: '', lat: '', lng: '', daily_orders: '' });
+    setFeedback({ type: 'success', message: `Added "${manualRow.name}" to dataset.` });
+  };
+
+  // Clear manual inputs
+  const handleClearManualForm = () => {
+    setManualRow({ name: '', lat: '', lng: '', daily_orders: '' });
+    setFeedback({ type: 'success', message: 'Cleared manual entry inputs.' });
+  };
+
+  // Clear all data points
+  const handleClearAll = () => {
+    clearData();
+    setFeedback({ type: 'success', message: 'All dataset points cleared. Ready for fresh input.' });
+  };
+
+  // Trigger optimization directly from data management
+  const handleRunOptimization = async () => {
+    if (neighborhoods.length === 0) {
+      loadSampleData();
+    }
+    const res = await executeOptimization();
+    if (res) {
+      navigate('/results');
+    }
   };
 
   return (
     <div className="space-y-8 pb-16">
       
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Data Management</h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Manage your network demand nodes. Upload CSV files or edit coordinates and order volumes inline.
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Data Management</h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Configure your delivery demand nodes via CSV upload or manual coordinates.
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        {/* Global Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={loadSampleData}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 transition-all"
+            onClick={() => {
+              loadSampleData();
+              setFeedback({ type: 'success', message: 'Loaded 16 canonical Bengaluru corridors.' });
+            }}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Load Bengaluru Sample (16 Hubs)</span>
-          </button>
-
-          <button
-            onClick={handleDownloadTemplate}
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all"
-          >
-            <FileText className="w-3.5 h-3.5 text-slate-400" />
-            <span>CSV Template</span>
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <span>Load Sample (16 BLR)</span>
           </button>
 
           <button
             onClick={handleExportCurrentData}
             disabled={neighborhoods.length === 0}
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all disabled:opacity-40"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors disabled:opacity-40"
           >
-            <Download className="w-3.5 h-3.5 text-slate-400" />
+            <Download className="w-3.5 h-3.5 text-slate-500" />
             <span>Export CSV</span>
           </button>
 
           {neighborhoods.length > 0 && (
             <button
-              onClick={clearData}
-              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-all"
+              onClick={handleClearAll}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+              title="Clear all points to start fresh"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear All</span>
+              <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+              <span>Clear All Data</span>
             </button>
           )}
         </div>
@@ -216,46 +242,50 @@ export default function DataManagement() {
 
       {/* Notification Banner */}
       {feedback && (
-        <div
-          className={`p-4 rounded-xl border flex items-center justify-between text-sm ${
-            feedback.type === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-              : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-          }`}
-        >
+        <div className={`p-3.5 rounded-lg border text-xs flex items-center justify-between ${
+          feedback.type === 'success' 
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+            : 'bg-rose-50 border-rose-200 text-rose-800'
+        }`}>
           <div className="flex items-center space-x-2">
             {feedback.type === 'success' ? (
-              <Check className="w-4 h-4 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-400" />
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             )}
             <span>{feedback.message}</span>
           </div>
-          <button
-            onClick={() => setFeedback(null)}
-            className="text-xs opacity-70 hover:opacity-100 underline ml-4"
-          >
-            Dismiss
-          </button>
+          <button onClick={() => setFeedback(null)} className="underline hover:opacity-80">Dismiss</button>
         </div>
       )}
 
-      {/* Upload Drag & Drop Box */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 bg-slate-900/60 border border-slate-800 rounded-xl p-6 flex flex-col justify-between space-y-4">
-          <div>
-            <h3 className="text-base font-semibold text-white flex items-center space-x-2">
-              <Upload className="w-4 h-4 text-brand-400" />
-              <span>Upload CSV Dataset</span>
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Select or drop any CSV file containing <code className="text-brand-300">Name</code>, <code className="text-brand-300">Latitude</code>, <code className="text-brand-300">Longitude</code>, and <code className="text-brand-300">Daily Orders</code>.
-            </p>
+      {/* REPLACED INPUT SECTION: SPLIT-LAYOUT (Option A: Upload CSV | Option B: Manual Data Entry) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+        {/* OPTION A: UPLOAD CSV DATASET */}
+        <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+              <Upload className="w-4 h-4 text-blue-600" />
+              <span>Option A: Upload CSV Dataset</span>
+            </h2>
+            <button
+              onClick={handleDownloadTemplate}
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Template</span>
+            </button>
           </div>
 
+          <p className="text-xs text-slate-500">
+            Upload any CSV containing <code>Neighborhood</code>, <code>Latitude</code>, <code>Longitude</code>, and <code>Daily Orders</code>.
+          </p>
+
+          {/* Drag & Drop Box */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-700 hover:border-brand-500/70 bg-slate-950/40 hover:bg-slate-900/50 rounded-xl p-8 text-center cursor-pointer transition-all group"
+            className="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 hover:bg-blue-50/40 rounded-lg p-6 text-center cursor-pointer transition-colors group"
           >
             <input
               type="file"
@@ -264,119 +294,196 @@ export default function DataManagement() {
               accept=".csv"
               className="hidden"
             />
-            <div className="w-12 h-12 mx-auto rounded-full bg-slate-800 group-hover:bg-brand-500/20 flex items-center justify-center text-slate-400 group-hover:text-brand-300 transition-colors">
-              <Upload className="w-6 h-6" />
+            <div className="w-10 h-10 mx-auto rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 group-hover:text-blue-600 group-hover:border-blue-300 shadow-sm transition-colors">
+              <Upload className="w-5 h-5" />
             </div>
-            <p className="text-xs font-medium text-slate-300 mt-3 group-hover:text-white">
+            <p className="text-xs font-semibold text-slate-700 mt-2 group-hover:text-blue-700">
               Click to browse or drop CSV file
             </p>
-            <p className="text-[11px] text-slate-500 mt-1">Supports UTF-8 CSV</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Supports UTF-8 formatted CSV</p>
           </div>
 
-          {/* Quick Summary Pill */}
-          <div className="bg-slate-950/60 rounded-lg p-3 border border-slate-800/80 text-xs space-y-1">
-            <div className="flex justify-between text-slate-400">
-              <span>Total Neighborhoods:</span>
-              <strong className="text-white font-mono">{neighborhoods.length}</strong>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Aggregate Demand:</span>
-              <strong className="text-cyan-400 font-mono">{totalOrders.toLocaleString()} orders/day</strong>
-            </div>
+          {/* Action Row: Preload Sample & Clear CSV */}
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              onClick={() => {
+                loadSampleData();
+                setFeedback({ type: 'success', message: 'Preloaded 16 authentic Bengaluru delivery corridors.' });
+              }}
+              className="flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors flex items-center justify-center space-x-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <span>Preload Sample BLR (16 Corridors)</span>
+            </button>
+
+            {neighborhoods.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="py-2 px-3 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors flex items-center justify-center space-x-1"
+                title="Clear CSV / Reset all points"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Manual Add Form */}
-        <div className="lg:col-span-2 bg-slate-900/60 border border-slate-800 rounded-xl p-6 space-y-4">
-          <div>
-            <h3 className="text-base font-semibold text-white flex items-center space-x-2">
-              <Plus className="w-4 h-4 text-brand-400" />
-              <span>Add Individual Neighborhood</span>
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Manually append a geographic coordinate node and daily order volume to the live dataset.
-            </p>
+        {/* OPTION B: MANUAL DATA ENTRY */}
+        <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+              <Plus className="w-4 h-4 text-blue-600" />
+              <span>Option B: Manual Data Entry</span>
+            </h2>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-slate-500">{neighborhoods.length} Points in Memory</span>
+              {(manualRow.name || manualRow.lat || manualRow.lng || manualRow.daily_orders) && (
+                <button
+                  onClick={handleClearManualForm}
+                  className="text-xs text-slate-400 hover:text-slate-600 underline"
+                  title="Clear inputs"
+                >
+                  Clear Form
+                </button>
+              )}
+            </div>
           </div>
 
-          <form onSubmit={handleAddRow} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+          {/* Inline Add Node Form */}
+          <form onSubmit={handleAddManualNode} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Neighborhood Name</label>
               <input
                 type="text"
-                placeholder="e.g. MG Road Central"
-                value={newRow.name}
-                onChange={(e) => setNewRow({ ...newRow, name: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                placeholder="Name (e.g. MG Road)"
+                value={manualRow.name}
+                onChange={(e) => setManualRow({ ...manualRow, name: e.target.value })}
+                className="w-full text-xs px-2.5 py-1.5 rounded border border-slate-300 focus:outline-none focus:border-blue-600"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Latitude</label>
               <input
                 type="number"
                 step="any"
-                placeholder="e.g. 12.9716"
-                value={newRow.lat}
-                onChange={(e) => setNewRow({ ...newRow, lat: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                placeholder="Lat (e.g. 12.97)"
+                value={manualRow.lat}
+                onChange={(e) => setManualRow({ ...manualRow, lat: e.target.value })}
+                className="w-full text-xs px-2.5 py-1.5 rounded border border-slate-300 focus:outline-none focus:border-blue-600"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Longitude</label>
               <input
                 type="number"
                 step="any"
-                placeholder="e.g. 77.5946"
-                value={newRow.lng}
-                onChange={(e) => setNewRow({ ...newRow, lng: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                placeholder="Lng (e.g. 77.59)"
+                value={manualRow.lng}
+                onChange={(e) => setManualRow({ ...manualRow, lng: e.target.value })}
+                className="w-full text-xs px-2.5 py-1.5 rounded border border-slate-300 focus:outline-none focus:border-blue-600"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Daily Orders</label>
               <input
                 type="number"
-                placeholder="e.g. 3500"
-                value={newRow.daily_orders}
-                onChange={(e) => setNewRow({ ...newRow, daily_orders: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                placeholder="Orders (e.g. 3000)"
+                value={manualRow.daily_orders}
+                onChange={(e) => setManualRow({ ...manualRow, daily_orders: e.target.value })}
+                className="w-full text-xs px-2.5 py-1.5 rounded border border-slate-300 focus:outline-none focus:border-blue-600"
               />
             </div>
-
-            <div className="sm:col-span-2 lg:col-span-4 flex justify-end pt-1">
+            <div className="col-span-2 sm:col-span-4 flex items-center gap-2">
               <button
                 type="submit"
-                className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95"
+                className="flex-1 py-2 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition-colors flex items-center justify-center space-x-1"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-blue-600" />
                 <span>Add Node to Dataset</span>
               </button>
             </div>
           </form>
+
+          {/* Compact Scrollable Mini-Table */}
+          <div className="border border-slate-200 rounded-lg overflow-hidden max-h-44 overflow-y-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] font-semibold sticky top-0 border-b border-slate-200">
+                <tr>
+                  <th className="py-2 px-3">Location</th>
+                  <th className="py-2 px-2">Lat, Lng</th>
+                  <th className="py-2 px-2">Orders</th>
+                  <th className="py-2 px-2 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                {neighborhoods.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-4 text-center text-slate-400 font-sans">
+                      No nodes loaded. Upload CSV or enter coordinates above.
+                    </td>
+                  </tr>
+                ) : (
+                  neighborhoods.map((n) => (
+                    <tr key={n.id} className="hover:bg-slate-50 font-sans">
+                      <td className="py-1.5 px-3 font-medium text-slate-800 truncate max-w-[120px]">{n.name}</td>
+                      <td className="py-1.5 px-2 text-slate-500 font-mono text-[10px]">{n.lat.toFixed(2)}, {n.lng.toFixed(2)}</td>
+                      <td className="py-1.5 px-2 text-blue-600 font-semibold">{n.daily_orders.toLocaleString()}</td>
+                      <td className="py-1.5 px-2 text-right">
+                        <button
+                          onClick={() => removeNeighborhood(n.id)}
+                          className="text-slate-400 hover:text-rose-600 p-0.5"
+                          title="Remove node"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </div>
 
-      {/* Editable Table View */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+      {/* PROMINENT ACTION BUTTON: RUN OPTIMIZATION */}
+      <div className="pt-2">
+        <button
+          onClick={handleRunOptimization}
+          disabled={isOptimizing || neighborhoods.length === 0}
+          className="w-full py-4 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-base tracking-wider uppercase shadow-sm hover:shadow transition-all flex items-center justify-center space-x-2.5 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
+        >
+          <Zap className="w-5 h-5 text-amber-300" />
+          <span>{isOptimizing ? 'COMPUTING OPTIMIZATION MATRIX...' : 'RUN OPTIMIZATION'}</span>
+          <ArrowRight className="w-5 h-5 ml-1" />
+        </button>
+        {neighborhoods.length === 0 && (
+          <p className="text-center text-xs text-slate-400 mt-2">
+            * Add demand nodes above or click "Preload Sample BLR" to enable optimization.
+          </p>
+        )}
+      </div>
+
+      {/* LIVE DEMAND REGISTRY (PRESERVED AS REQUESTED) */}
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <h3 className="text-base font-semibold text-white">Live Demand Registry</h3>
-            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20">
+            <h3 className="text-base font-bold text-slate-900">Live Demand Registry</h3>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
               {neighborhoods.length} Points
             </span>
+            <span className="text-xs text-slate-500 font-mono hidden sm:inline">
+              ({totalOrders.toLocaleString()} Total Daily Orders)
+            </span>
           </div>
-          <span className="text-xs text-slate-400">Click any field to edit directly</span>
+          <span className="text-xs text-slate-500">Click any cell to edit coordinates directly</span>
         </div>
 
         {neighborhoods.length === 0 ? (
           <div className="p-12 text-center space-y-3">
-            <Package className="w-10 h-10 text-slate-600 mx-auto" />
-            <p className="text-sm text-slate-400">No neighborhood points loaded yet.</p>
+            <Package className="w-10 h-10 text-slate-400 mx-auto" />
+            <p className="text-sm text-slate-600">No neighborhood points loaded yet.</p>
             <button
               onClick={loadSampleData}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 transition-all"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Load 16 Bengaluru Locations</span>
@@ -385,58 +492,58 @@ export default function DataManagement() {
         ) : (
           <div className="overflow-x-auto max-h-[500px]">
             <table className="w-full text-left text-xs">
-              <thead className="sticky top-0 bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider font-semibold">
+              <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-semibold">
                 <tr>
-                  <th className="py-3 px-4">#</th>
-                  <th className="py-3 px-4">Neighborhood Name</th>
-                  <th className="py-3 px-4">Latitude</th>
-                  <th className="py-3 px-4">Longitude</th>
-                  <th className="py-3 px-4">Daily Orders</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-2.5 px-4">#</th>
+                  <th className="py-2.5 px-4">Neighborhood Name</th>
+                  <th className="py-2.5 px-4">Latitude</th>
+                  <th className="py-2.5 px-4">Longitude</th>
+                  <th className="py-2.5 px-4">Daily Orders</th>
+                  <th className="py-2.5 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
                 {neighborhoods.map((n, idx) => (
-                  <tr key={n.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-2.5 px-4 text-slate-500 font-sans">{idx + 1}</td>
-                    <td className="py-2.5 px-4 font-sans font-medium text-white">
+                  <tr key={n.id} className="hover:bg-slate-50 transition-colors font-sans">
+                    <td className="py-2 px-4 text-slate-400">{idx + 1}</td>
+                    <td className="py-2 px-4 font-medium text-slate-900">
                       <input
                         type="text"
                         value={n.name}
                         onChange={(e) => updateNeighborhood(n.id, 'name', e.target.value)}
-                        className="bg-transparent hover:bg-slate-800/60 focus:bg-slate-900 px-2 py-1 rounded border border-transparent focus:border-brand-500 focus:outline-none w-full text-slate-200"
+                        className="bg-transparent hover:bg-slate-100 focus:bg-white px-2 py-1 rounded border border-transparent focus:border-blue-600 focus:outline-none w-full text-slate-900"
                       />
                     </td>
-                    <td className="py-2.5 px-4 text-slate-300">
+                    <td className="py-2 px-4 text-slate-600">
                       <input
                         type="number"
                         step="any"
                         value={n.lat}
                         onChange={(e) => updateNeighborhood(n.id, 'lat', parseFloat(e.target.value) || 0)}
-                        className="bg-transparent hover:bg-slate-800/60 focus:bg-slate-900 px-2 py-1 rounded border border-transparent focus:border-brand-500 focus:outline-none w-28 text-slate-300"
+                        className="bg-transparent hover:bg-slate-100 focus:bg-white px-2 py-1 rounded border border-transparent focus:border-blue-600 focus:outline-none w-24 text-slate-700 font-mono"
                       />
                     </td>
-                    <td className="py-2.5 px-4 text-slate-300">
+                    <td className="py-2 px-4 text-slate-600">
                       <input
                         type="number"
                         step="any"
                         value={n.lng}
                         onChange={(e) => updateNeighborhood(n.id, 'lng', parseFloat(e.target.value) || 0)}
-                        className="bg-transparent hover:bg-slate-800/60 focus:bg-slate-900 px-2 py-1 rounded border border-transparent focus:border-brand-500 focus:outline-none w-28 text-slate-300"
+                        className="bg-transparent hover:bg-slate-100 focus:bg-white px-2 py-1 rounded border border-transparent focus:border-blue-600 focus:outline-none w-24 text-slate-700 font-mono"
                       />
                     </td>
-                    <td className="py-2.5 px-4 text-cyan-400 font-semibold">
+                    <td className="py-2 px-4 text-blue-600 font-semibold">
                       <input
                         type="number"
                         value={n.daily_orders}
                         onChange={(e) => updateNeighborhood(n.id, 'daily_orders', parseInt(e.target.value, 10) || 0)}
-                        className="bg-transparent hover:bg-slate-800/60 focus:bg-slate-900 px-2 py-1 rounded border border-transparent focus:border-brand-500 focus:outline-none w-24 text-cyan-400"
+                        className="bg-transparent hover:bg-slate-100 focus:bg-white px-2 py-1 rounded border border-transparent focus:border-blue-600 focus:outline-none w-24 text-blue-600 font-mono"
                       />
                     </td>
-                    <td className="py-2.5 px-4 text-right">
+                    <td className="py-2 px-4 text-right">
                       <button
                         onClick={() => removeNeighborhood(n.id)}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                        className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                         title="Delete node"
                       >
                         <Trash2 className="w-4 h-4" />
