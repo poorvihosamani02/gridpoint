@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   Fuel,
   Info,
-  Clock
+  Clock,
+  RotateCcw
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { FLEET_INFO, TRAFFIC_INFO } from '../utils/sampleData';
@@ -52,19 +53,20 @@ export default function Optimization() {
     <div className="space-y-8 pb-16">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center space-x-3">
-            <Sliders className="w-7 h-7 text-brand-400" />
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center space-x-3">
+            <Sliders className="w-7 h-7 text-blue-600" />
             <span>Optimization Control Panel</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Configure algorithmic clustering parameters, capacity boundaries, fleet vehicle dynamics, and demand simulations.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
           <button
+            type="button"
             onClick={() => {
               const defaults = {
                 num_warehouses: 3,
@@ -79,17 +81,18 @@ export default function Optimization() {
               setLocalSettings(defaults);
               updateSettings(defaults);
             }}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-750 border border-slate-700 transition-all"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors"
           >
-            Reset Defaults
+            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+            <span>Reset Defaults</span>
           </button>
         </div>
       </div>
 
       {/* Error notification if any */}
       {error && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
-          <Info className="w-4 h-4 text-rose-400 shrink-0" />
+        <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
+          <Info className="w-4 h-4 text-rose-600 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -99,22 +102,22 @@ export default function Optimization() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Section 1: Warehouses & Capacity Limits */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 space-y-6">
-            <div className="flex items-center space-x-2.5 border-b border-slate-800 pb-3">
-              <div className="p-2 rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/20">
+          <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+            <div className="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
+              <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">
                 <Building2 className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-white">1. Multi-Warehouse & Capacity Constraints</h3>
-                <p className="text-xs text-slate-400">Configure target fulfillment hubs and throughput boundaries.</p>
+                <h3 className="text-base font-bold text-slate-900">1. Multi-Warehouse & Capacity Constraints</h3>
+                <p className="text-xs text-slate-500">Configure target fulfillment hubs and throughput boundaries.</p>
               </div>
             </div>
 
             {/* Warehouse count slider */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
-                <label className="font-semibold text-slate-300">Number of Warehouses (K):</label>
-                <span className="font-mono text-brand-400 font-bold text-sm">{localSettings.num_warehouses} Hubs</span>
+                <label className="font-semibold text-slate-700">Number of Warehouses (K):</label>
+                <span className="font-mono text-blue-600 font-bold text-sm">{localSettings.num_warehouses} Hubs</span>
               </div>
               <input
                 type="range"
@@ -123,7 +126,7 @@ export default function Optimization() {
                 step="1"
                 value={localSettings.num_warehouses}
                 onChange={(e) => handleChange('num_warehouses', parseInt(e.target.value, 10))}
-                className="w-full accent-brand-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                className="w-full accent-blue-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
               />
               <div className="flex justify-between text-[11px] text-slate-500 font-mono">
                 <span>1 (Central)</span>
@@ -137,8 +140,8 @@ export default function Optimization() {
             {/* Warehouse capacity slider */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
-                <label className="font-semibold text-slate-300">Max Warehouse Capacity Limit:</label>
-                <span className="font-mono text-cyan-400 font-bold text-sm">
+                <label className="font-semibold text-slate-700">Max Warehouse Capacity Limit:</label>
+                <span className="font-mono text-blue-600 font-bold text-sm">
                   {localSettings.capacity_limit.toLocaleString()} orders/hub
                 </span>
               </div>
@@ -149,7 +152,7 @@ export default function Optimization() {
                 step="500"
                 value={localSettings.capacity_limit}
                 onChange={(e) => handleChange('capacity_limit', parseInt(e.target.value, 10))}
-                className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                className="w-full accent-blue-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
               />
               <div className="flex justify-between text-[11px] text-slate-500">
                 <span>1,000 orders</span>
@@ -162,10 +165,10 @@ export default function Optimization() {
             </div>
 
             {/* Max Delivery Radius */}
-            <div className="space-y-2 pt-2 border-t border-slate-800/80">
+            <div className="space-y-2 pt-2 border-t border-slate-100">
               <div className="flex justify-between text-xs">
-                <label className="font-semibold text-slate-300">Maximum Delivery Radius (SLA Boundary):</label>
-                <span className="font-mono text-amber-400 font-bold text-sm">
+                <label className="font-semibold text-slate-700">Maximum Delivery Radius (SLA Boundary):</label>
+                <span className="font-mono text-blue-600 font-bold text-sm">
                   {localSettings.max_delivery_radius_km} km
                 </span>
               </div>
@@ -176,7 +179,7 @@ export default function Optimization() {
                 step="1"
                 value={localSettings.max_delivery_radius_km}
                 onChange={(e) => handleChange('max_delivery_radius_km', parseFloat(e.target.value))}
-                className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                className="w-full accent-blue-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
               />
               <div className="flex justify-between text-[11px] text-slate-500">
                 <span>5 km (Ultra-Fast)</span>
@@ -190,20 +193,20 @@ export default function Optimization() {
           </div>
 
           {/* Section 2: Fleet Types & Fuel Costs */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 space-y-6">
-            <div className="flex items-center space-x-2.5 border-b border-slate-800 pb-3">
-              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+          <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+            <div className="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
+              <div className="p-2 rounded-lg bg-purple-50 text-purple-600 border border-purple-200">
                 <Truck className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-white">2. Vehicle Fleet & Fuel Cost Modeling</h3>
-                <p className="text-xs text-slate-400">Select distribution fleet profile and operational fuel parameters.</p>
+                <h3 className="text-base font-bold text-slate-900">2. Vehicle Fleet & Fuel Cost Modeling</h3>
+                <p className="text-xs text-slate-500">Select distribution fleet profile and operational fuel parameters.</p>
               </div>
             </div>
 
             {/* Fleet selector */}
             <div className="space-y-3">
-              <label className="block text-xs font-semibold text-slate-300">Active Delivery Fleet Type:</label>
+              <label className="block text-xs font-semibold text-slate-700">Active Delivery Fleet Type:</label>
               <div className="grid grid-cols-3 gap-2.5">
                 {[
                   { id: 'bikes', label: 'Bikes / Scooters', icon: '🛵' },
@@ -214,10 +217,10 @@ export default function Optimization() {
                     key={f.id}
                     type="button"
                     onClick={() => handleChange('fleet_type', f.id)}
-                    className={`p-3 rounded-xl border text-center transition-all ${
+                    className={`p-3 rounded-lg border text-center transition-all ${
                       localSettings.fleet_type === f.id
-                        ? 'bg-purple-500/20 text-white border-purple-500/50 shadow-md shadow-purple-500/10'
-                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+                        ? 'bg-blue-50 text-blue-900 border-blue-600 ring-1 ring-blue-600 shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <div className="text-2xl mb-1">{f.icon}</div>
@@ -228,40 +231,40 @@ export default function Optimization() {
             </div>
 
             {/* Fleet Specs Display */}
-            <div className="bg-slate-950/80 rounded-xl p-4 border border-slate-800 space-y-2 text-xs">
-              <div className="font-semibold text-slate-200">{selectedFleet.name}</div>
-              <p className="text-slate-400 text-[11px] leading-relaxed">{selectedFleet.desc}</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800/80">
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2 text-xs">
+              <div className="font-semibold text-slate-900">{selectedFleet.name}</div>
+              <p className="text-slate-600 text-[11px] leading-relaxed">{selectedFleet.desc}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200">
                 <div>
-                  <span className="text-slate-500 block text-[10px] uppercase">Fuel Economy</span>
-                  <strong className="text-purple-300 font-mono">{selectedFleet.efficiency}</strong>
+                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Fuel Economy</span>
+                  <strong className="text-slate-900 font-mono">{selectedFleet.efficiency}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block text-[10px] uppercase">Fuel Price</span>
-                  <strong className="text-purple-300 font-mono">{selectedFleet.fuelPrice}</strong>
+                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Fuel Price</span>
+                  <strong className="text-slate-900 font-mono">{selectedFleet.fuelPrice}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block text-[10px] uppercase">Cruise Speed</span>
-                  <strong className="text-purple-300 font-mono">{selectedFleet.speed}</strong>
+                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Cruise Speed</span>
+                  <strong className="text-slate-900 font-mono">{selectedFleet.speed}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block text-[10px] uppercase">Batch Capacity</span>
-                  <strong className="text-purple-300 font-mono">{selectedFleet.capacity}</strong>
+                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Batch Capacity</span>
+                  <strong className="text-slate-900 font-mono">{selectedFleet.capacity}</strong>
                 </div>
               </div>
             </div>
 
-            {/* Section 3: Traffic Conditions */}
-            <div className="space-y-3 pt-2 border-t border-slate-800/80">
-              <label className="block text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
+            {/* Traffic Conditions */}
+            <div className="space-y-3 pt-2 border-t border-slate-100">
+              <label className="block text-xs font-semibold text-slate-700 flex items-center space-x-1.5">
+                <Clock className="w-3.5 h-3.5 text-blue-600" />
                 <span>City Traffic Congestion Level:</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'light', label: 'Light', tag: '0.8x Transit', color: 'emerald' },
-                  { id: 'normal', label: 'Normal', tag: '1.0x Baseline', color: 'blue' },
-                  { id: 'heavy', label: 'Heavy', tag: '1.65x Delay', color: 'rose' }
+                  { id: 'light', label: 'Light', tag: '0.8x Transit' },
+                  { id: 'normal', label: 'Normal', tag: '1.0x Baseline' },
+                  { id: 'heavy', label: 'Heavy', tag: '1.65x Delay' }
                 ].map((t) => (
                   <button
                     key={t.id}
@@ -269,37 +272,36 @@ export default function Optimization() {
                     onClick={() => handleChange('traffic_condition', t.id)}
                     className={`py-2 px-3 rounded-lg border text-center transition-all ${
                       localSettings.traffic_condition === t.id
-                        ? 'bg-slate-800 text-white border-brand-500 shadow-sm'
-                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+                        ? 'bg-blue-50 text-blue-900 border-blue-600 ring-1 ring-blue-600 shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <div className="text-xs font-semibold">{t.label}</div>
-                    <div className="text-[10px] text-slate-400">{t.tag}</div>
+                    <div className="text-[10px] text-slate-500">{t.tag}</div>
                   </button>
                 ))}
               </div>
             </div>
-
           </div>
 
           {/* Section 3: Demand Simulation */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 space-y-6">
-            <div className="flex items-center space-x-2.5 border-b border-slate-800 pb-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+            <div className="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
+              <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-white">3. Customer Demand Shift (Simulation)</h3>
-                <p className="text-xs text-slate-400">Stress test network with demand surges or seasonal recessions.</p>
+                <h3 className="text-base font-bold text-slate-900">3. Customer Demand Shift (Simulation)</h3>
+                <p className="text-xs text-slate-500">Stress test network with demand surges or seasonal recessions.</p>
               </div>
             </div>
 
             {/* Demand slider */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
-                <label className="font-semibold text-slate-300">Demand Modifier (% Shift):</label>
+                <label className="font-semibold text-slate-700">Demand Modifier (% Shift):</label>
                 <span className={`font-mono font-bold text-sm ${
-                  localSettings.demand_modifier_pct > 0 ? 'text-emerald-400' : localSettings.demand_modifier_pct < 0 ? 'text-rose-400' : 'text-slate-200'
+                  localSettings.demand_modifier_pct > 0 ? 'text-emerald-600' : localSettings.demand_modifier_pct < 0 ? 'text-rose-600' : 'text-slate-900'
                 }`}>
                   {localSettings.demand_modifier_pct > 0 ? `+${localSettings.demand_modifier_pct}%` : `${localSettings.demand_modifier_pct}%`}
                 </span>
@@ -311,7 +313,7 @@ export default function Optimization() {
                 step="5"
                 value={localSettings.demand_modifier_pct}
                 onChange={(e) => handleChange('demand_modifier_pct', parseFloat(e.target.value))}
-                className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                className="w-full accent-blue-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
               />
               <div className="flex justify-between text-[11px] text-slate-500 font-mono">
                 <span>-50% (Slump)</span>
@@ -320,33 +322,33 @@ export default function Optimization() {
               </div>
             </div>
 
-            <div className="bg-slate-950 rounded-xl p-4 border border-slate-800/80 flex items-center justify-between text-xs">
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 flex items-center justify-between text-xs">
               <div>
-                <span className="text-slate-400 block">Baseline Aggregate Volume:</span>
-                <strong className="text-white font-mono">{totalBaseOrders.toLocaleString()} orders/day</strong>
+                <span className="text-slate-500 block">Baseline Aggregate Volume:</span>
+                <strong className="text-slate-900 font-mono">{totalBaseOrders.toLocaleString()} orders/day</strong>
               </div>
               <div className="text-right">
-                <span className="text-slate-400 block">Effective Simulated Volume:</span>
-                <strong className="text-emerald-400 font-mono text-sm">{totalEffectiveOrders.toLocaleString()} orders/day</strong>
+                <span className="text-slate-500 block">Effective Simulated Volume:</span>
+                <strong className="text-emerald-700 font-mono text-sm">{totalEffectiveOrders.toLocaleString()} orders/day</strong>
               </div>
             </div>
           </div>
 
           {/* Section 4: Infrastructure Financial Costs */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 space-y-6">
-            <div className="flex items-center space-x-2.5 border-b border-slate-800 pb-3">
-              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+            <div className="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-600 border border-amber-200">
                 <IndianRupee className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-white">4. Infrastructure & Operating Costs</h3>
-                <p className="text-xs text-slate-400">Fixed warehouse lease overhead vs marginal delivery rates.</p>
+                <h3 className="text-base font-bold text-slate-900">4. Infrastructure & Operating Costs</h3>
+                <p className="text-xs text-slate-500">Fixed warehouse lease overhead vs marginal delivery rates.</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Fixed Cost per Warehouse (Daily):
                 </label>
                 <div className="relative">
@@ -356,14 +358,14 @@ export default function Optimization() {
                     step="1000"
                     value={localSettings.fixed_warehouse_cost_daily}
                     onChange={(e) => handleChange('fixed_warehouse_cost_daily', parseFloat(e.target.value) || 0)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-xs text-white font-mono focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-white border border-slate-300 rounded-lg pl-7 pr-3 py-2 text-xs text-slate-900 font-mono focus:border-blue-600 focus:outline-none"
                   />
                 </div>
-                <span className="text-[10px] text-slate-500 mt-1 block">Rent, electricity, warehouse staffing</span>
+                <span className="text-[10px] text-slate-400 mt-1 block">Rent, electricity, warehouse staffing</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Delivery Rate (₹ per km-order):
                 </label>
                 <div className="relative">
@@ -373,20 +375,20 @@ export default function Optimization() {
                     step="0.1"
                     value={localSettings.cost_per_km_order}
                     onChange={(e) => handleChange('cost_per_km_order', parseFloat(e.target.value) || 0)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-xs text-white font-mono focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-white border border-slate-300 rounded-lg pl-7 pr-3 py-2 text-xs text-slate-900 font-mono focus:border-blue-600 focus:outline-none"
                   />
                 </div>
-                <span className="text-[10px] text-slate-500 mt-1 block">Marginal transit handling cost</span>
+                <span className="text-[10px] text-slate-400 mt-1 block">Marginal transit handling cost</span>
               </div>
             </div>
 
             {/* Total Estimated Infra Overhead */}
-            <div className="bg-slate-950 rounded-xl p-4 border border-slate-800/80 flex items-center justify-between text-xs">
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 flex items-center justify-between text-xs">
               <div>
-                <span className="text-slate-400 block">Total Fixed Infrastructure Daily Cost:</span>
-                <p className="text-[11px] text-slate-500">{localSettings.num_warehouses} Hubs × ₹{localSettings.fixed_warehouse_cost_daily.toLocaleString()}</p>
+                <span className="text-slate-500 block">Total Fixed Infrastructure Daily Cost:</span>
+                <p className="text-[11px] text-slate-400">{localSettings.num_warehouses} Hubs × ₹{localSettings.fixed_warehouse_cost_daily.toLocaleString()}</p>
               </div>
-              <strong className="text-amber-400 font-mono text-base">
+              <strong className="text-slate-900 font-mono text-base font-bold">
                 ₹{(localSettings.num_warehouses * localSettings.fixed_warehouse_cost_daily).toLocaleString()} / day
               </strong>
             </div>
@@ -395,18 +397,18 @@ export default function Optimization() {
         </div>
 
         {/* PROMINENT "RUN OPTIMIZATION" ACTION BAR */}
-        <div className="sticky bottom-4 z-30 bg-slate-900/95 backdrop-blur-md border border-brand-500/40 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-3 text-xs text-slate-300">
-            <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+        <div className="sticky bottom-4 z-30 bg-white/95 backdrop-blur-md border border-slate-200 rounded-lg p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-3 text-xs text-slate-600">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
             <span>
-              Configured: <strong>{localSettings.num_warehouses} Hubs</strong> | <strong>{selectedFleet.name}</strong> | <strong>{localSettings.traffic_condition.toUpperCase()} Traffic</strong>
+              Configured: <strong className="text-slate-900">{localSettings.num_warehouses} Hubs</strong> | <strong className="text-slate-900">{selectedFleet.name}</strong> | <strong className="text-slate-900">{localSettings.traffic_condition.toUpperCase()} Traffic</strong>
             </span>
           </div>
 
           <button
             type="submit"
             disabled={isOptimizing}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-brand-600 via-cyan-500 to-emerald-500 hover:from-brand-500 hover:via-cyan-400 hover:to-emerald-400 text-white font-bold text-sm tracking-wide uppercase shadow-lg shadow-brand-500/25 transition-all transform active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2.5 px-8 py-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm tracking-wide uppercase shadow-sm hover:shadow transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             <Zap className="w-5 h-5 text-amber-300" />
             <span>{isOptimizing ? 'COMPUTING OPTIMIZATION MATRIX...' : 'RUN OPTIMIZATION'}</span>

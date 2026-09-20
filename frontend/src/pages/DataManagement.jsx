@@ -182,15 +182,12 @@ export default function DataManagement() {
     setFeedback({ type: 'success', message: 'All dataset points cleared. Ready for fresh input.' });
   };
 
-  // Trigger optimization directly from data management
-  const handleRunOptimization = async () => {
+  // Proceed to Optimization settings from data management
+  const handleRunOptimization = () => {
     if (neighborhoods.length === 0) {
       loadSampleData();
     }
-    const res = await executeOptimization();
-    if (res) {
-      navigate('/results');
-    }
+    navigate('/optimize');
   };
 
   return (
